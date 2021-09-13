@@ -1,0 +1,63 @@
+def cmdString // global variable
+def ib = env.JOB_BASE_NAME
+
+pipeline {
+  options { timestamps() }
+  agent { label 'obr-app-10' }
+  stages {
+    stage ( 'stage 1. Подготовка среды') {
+      steps {
+        script {
+          echo '*** Инициализация среды и библиотек'
+          load './lib/SetEnvironment.groovy'
+          Common =  load './lib/Common.groovy'
+          DB = load './lib/DBManage.groovy'
+        }
+      }
+    }
+    stage ('stage 2. Подготовка ИБ') {
+      agent {
+        label 'linux'
+      }
+        steps {
+        script {
+          echo '*** Инициализация среды и библиотек '
+          myENV   = load './lib/SetEnvironment.groovy'
+          Common  = load './lib/Common.groovy'
+          DB      = load './lib/DBManage.groovy'
+
+          echo '*** Блокирование ИБ "' + ib + '", отключение сеансов ' + Common.TimeNow()
+
+          clstID = DB.clusterIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, env.JN_tst_CLUSTER_1C_HOST)
+          message = "Производится загрузка ИБ ${ib} из резервной копии"
+          withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')]) {
+            withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+              ibID = DB.databaseIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ib, clADMIN, clPASSWD)
+              DB.deleteConnectionsIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ibID, clADMIN, clPASSWD)
+              DB.lockIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message)
+          }}
+        }
+      }
+    }
+
+    stage( 'stage 3. формирование скрипта загрузки') {
+      agent {
+          label 'obr-app-10'
+      }
+      steps {
+        echo '*** запуск `oscript make_sql_script.os`'
+      }
+    }
+    stage( 'stage 1. загрузка бэкапа в ИБ') {
+      steps {
+        echo '*** выполнение скрипта `sqlcmd scriptname.sql` :::: ' + '"' + cmdString + '"'
+      }
+    }
+  }
+  post {
+    always { script {
+        echo '+++ снятие блокировки с ИБ'
+        bat 'set'
+    }}
+  }
+}
