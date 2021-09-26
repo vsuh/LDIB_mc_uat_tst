@@ -296,16 +296,12 @@ def max(ArrayList numbers) {
 def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
     // def sdf = new SimpleDateFormat(myFormatString)
     // return sdf.format(java.sql.Date.valueOf(mydate))
-
-    return mydate.format(myFormatString);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(myFormatString)
+    return mydate.format(formatter)
 }
 
 def addMinutes(mydate, minsAdd) {
-        return mydate.plusMinutes(minsAdd)
-}
-
-def raccmd() {
-    return '"' + env.JN_INSTALLATION_DIR_1C + '\\' + env.JN_PLATFORM_1C_VERSION + '\\bin\\rac.exe" ' + env.JN_tst_CLUSTER_1C_HOST + ' '
+    return mydate.plusMinutes(minsAdd)
 }
 
 def TimeNow(){
@@ -313,8 +309,9 @@ def TimeNow(){
     return t
 }
 
-
-
+def raccmd() {
+    return '"' + env.JN_INSTALLATION_DIR_1C + '\\' + env.JN_PLATFORM_1C_VERSION + '\\bin\\rac.exe" ' + env.JN_tst_CLUSTER_1C_HOST + ' '
+}
 
 // Return this module as Groovy object 
 return this
