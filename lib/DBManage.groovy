@@ -28,7 +28,6 @@ def databaseIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterId, databaseName1
 }
 
 def deleteConnectionsIBbyID(rasHostnameOrIP, rasPort, clusterId, databaseId, clstAdmin, clstPasswd) {
-print "*** got: rasHostnameOrIP ${rasHostnameOrIP}, rasPort ${rasPort}, clusterId ${clusterId}, databaseId ${databaseId}, clstAdmin ${clstAdmin}, clstPasswd ${clstPasswd}"
    if (databaseId != "") {
         def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin}  --cluster-pwd ${clstPasswd} list --infobase=${databaseId} | grep 'session ' | tr -d ' ' | cut -d ':' -f 2 | while read line ; do  ${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  terminate --session=\$line; done"
 
@@ -52,6 +51,10 @@ def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, datab
       Common.cmd(command)
     }
    sleep(5)
+}
+
+def unlockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, databaseId, ibAdmin, ibPwd) {
+    print "*** POST got: rasHostnameOrIP ${rasHostnameOrIP}, rasPort ${rasPort}, clusterId ${clusterId}, databaseId ${databaseId}, clstAdmin ${clstAdmin}, clstPasswd ${clstPasswd}"
 }
 // def deleteConnectionsViaRas(rasHostnameOrIP, rasPort, clusterName, databaseName, kill1CProcesses = true) {
 
