@@ -1,3 +1,4 @@
+import groovy.time.TimeCategory
 import java.time.*
 import java.text.SimpleDateFormat
 
@@ -298,7 +299,7 @@ def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
 }
 
 def addMinutes(mydate, minsAdd) {
-    use ( TimeCategory) {
+    use ( TimeCategory ) {
         return mydate + ${minsAdd}.minutes
     }
 }
