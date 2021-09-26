@@ -292,17 +292,27 @@ def max(ArrayList numbers) {
 
 }
 
+def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
+    def sdf = new SimpleDateFormat(myFormatString)
+    return sdf.format(mydate)
+}
+
+def addMinutes(mydate, minsAdd) {
+    use ( TimeCategory) {
+        return mydate + ${minsAdd}.minutes
+    }
+}
 def raccmd() {
     return '"' + env.JN_INSTALLATION_DIR_1C + '\\' + env.JN_PLATFORM_1C_VERSION + '\\bin\\rac.exe" ' + env.JN_tst_CLUSTER_1C_HOST + ' '
 }
 
 def TimeNow(){
-
-def sdf = new SimpleDateFormat("yyyy-MM-dd") //THH:mm:ss")
-LocalDateTime t = LocalDateTime.now()
-// print 'DATE DATE DATE ' + t
-return t
-
+    LocalDateTime t = LocalDateTime.now()
+    return t
 }
+
+
+
+
 // Return this module as Groovy object 
 return this

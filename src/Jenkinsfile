@@ -29,6 +29,8 @@ pipeline {
           CLPORT  = env.JN_tst_RAS_PORT
 
           echo '*** Блокирование ИБ "' + ib + '", отключение сеансов ' + Common.TimeNow()
+          echo '+++++++++++++++++++++++++++++++++++ ' + Common.addMinutes(Common.TimeNow(), 5)
+          echo '################################### ' + Common.formatDate(Common.addMinutes(Common.TimeNow(), 5))
 
           message = "Производится загрузка ИБ ${ib} из резервной копии"
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
