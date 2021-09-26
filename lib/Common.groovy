@@ -300,7 +300,7 @@ def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
 
 def addMinutes(mydate, minsAdd) {
     use ( TimeCategory ) {
-        return mydate + ${minsAdd}.minutes
+        return mydate + minsAdd.minutes
     }
 }
 def raccmd() {
