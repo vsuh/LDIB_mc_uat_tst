@@ -38,11 +38,12 @@ print "*** got: rasHostnameOrIP ${rasHostnameOrIP}, rasPort ${rasPort}, clusterI
     }
   sleep(5)
 }
+
 def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, databaseId, ibAdmin, ibPwd, lockMessage, lockCode) {
 
     def TimeNow = Common.TimeNow()
     def NowPlus5min = '20210926T190500'
-   if (databaseId != "") {
+    if (databaseId != "") {
         def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --denied-from=${TimeNow} --denied-to=${NowPlus5min} --permission-code=${lockCode} --denied-message=${lockMessage}  sessions-deny=on --scheduled-jobs-deny=on"
 
         if (env.JN_VERBOSE == "true")

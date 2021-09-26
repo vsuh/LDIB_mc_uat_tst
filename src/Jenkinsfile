@@ -28,14 +28,14 @@ pipeline {
 
           echo '*** Блокирование ИБ "' + ib + '", отключение сеансов ' + Common.TimeNow()
 
-          clstID = DB.clusterIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, env.JN_tst_CLUSTER_1C_HOST)
           message = "Производится загрузка ИБ ${ib} из резервной копии"
-          withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')]) {
-            withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-              ibID = DB.databaseIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ib, clADMIN, clPASSWD)
-              DB.deleteConnectionsIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ibID, clADMIN, clPASSWD)
-              DB.lockIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message)
-          }}
+          withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+              ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            clstID = DB.clusterIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, env.JN_tst_CLUSTER_1C_HOST)
+            ibID = DB.databaseIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ib, clADMIN, clPASSWD)
+            DB.deleteConnectionsIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ibID, clADMIN, clPASSWD)
+            DB.lockIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message)
+          }
         }
       }
     }
