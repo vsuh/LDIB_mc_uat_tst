@@ -1,5 +1,6 @@
 import groovy.time.TimeCategory
 import java.time.*
+import java.time.format.*
 import java.text.SimpleDateFormat
 
 def exportEnvironmentVariablePrefix() {
