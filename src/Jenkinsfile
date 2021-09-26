@@ -48,9 +48,10 @@ pipeline {
       agent {
           label 'obr-app-10'
       }
-      steps {
+      steps {script{
         echo '*** запуск `oscript make_sql_script.os`'
-      }
+        Common.cmd('oscript')
+      }}
     }
     stage( 'stage 1. загрузка бэкапа в ИБ') {
       steps {
