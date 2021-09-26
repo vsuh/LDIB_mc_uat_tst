@@ -60,15 +60,12 @@ pipeline {
     }
   }
   post {
-    agent{
-        label 'linux'
-    }
-    always { script {
+     always { script {
         echo '+++ снятие блокировки с ИБ'
 
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
               ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            DB.unlockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD)
+            bat('deployka')
           }
     }}
   }
