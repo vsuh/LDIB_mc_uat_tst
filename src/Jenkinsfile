@@ -25,16 +25,18 @@ pipeline {
           myENV   = load './lib/SetEnvironment.groovy'
           Common  = load './lib/Common.groovy'
           DB      = load './lib/DBManage.groovy'
+          CLADDR  = env.JN_tst_RAS_HOST
+          CLPORT  = env.JN_tst_RAS_PORT
 
           echo '*** Блокирование ИБ "' + ib + '", отключение сеансов ' + Common.TimeNow()
 
           message = "Производится загрузка ИБ ${ib} из резервной копии"
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
               ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            clstID = DB.clusterIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, env.JN_tst_CLUSTER_1C_HOST)
-            ibID = DB.databaseIdentifierFromRAS(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ib, clADMIN, clPASSWD)
-            DB.deleteConnectionsIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, ibID, clADMIN, clPASSWD)
-            DB.lockIBbyID(env.JN_tst_RAS_HOST, env.JN_tst_RAS_PORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message)
+            clstID = DB.clusterIdentifierFromRAS(CLADDR, CLPORT, env.JN_tst_CLUSTER_1C_HOST)
+            ibID = DB.databaseIdentifierFromRAS(CLADDR, CLPORT, clstID, ib, clADMIN, clPASSWD)
+            DB.deleteConnectionsIBbyID(CLADDR, CLPORT, clstID, ibID, clADMIN, clPASSWD)
+            DB.lockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message, "0008")
           }
         }
       }
