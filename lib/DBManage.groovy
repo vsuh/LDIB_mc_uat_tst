@@ -38,10 +38,7 @@ print "*** got: rasHostnameOrIP ${rasHostnameOrIP}, rasPort ${rasPort}, clusterI
     }
   sleep(5)
 }
-def lockIBbyID(rasHostnameOrIP, rasPort
-        , clusterId, clstAdmin, clstPasswd
-        , databaseId, ibAdmin, ibPwd
-        , lockMessage, lockCode) {
+def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, databaseId, ibAdmin, ibPwd, lockMessage, lockCode) {
 
     def TimeNow = Common.TimeNow()
     def NowPlus5min = '20210926T190500'
