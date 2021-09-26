@@ -294,8 +294,10 @@ def max(ArrayList numbers) {
 }
 
 def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
-    def sdf = new SimpleDateFormat(myFormatString)
-    return sdf.format(mydate)
+    // def sdf = new SimpleDateFormat(myFormatString)
+    // return sdf.format(java.sql.Date.valueOf(mydate))
+
+    return mydate.format(myFormatString);
 }
 
 def addMinutes(mydate, minsAdd) {
