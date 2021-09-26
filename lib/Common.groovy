@@ -294,7 +294,7 @@ def max(ArrayList numbers) {
 
 }
 
-def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
+def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'HH:mm:ss"){
     // def sdf = new SimpleDateFormat(myFormatString)
     // return sdf.format(java.sql.Date.valueOf(mydate))
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(myFormatString)
