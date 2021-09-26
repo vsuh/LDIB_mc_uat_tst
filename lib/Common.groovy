@@ -299,10 +299,9 @@ def formatDate(mydate, myFormatString =  "yyyy-MM-dd'T'hh:mm:ss"){
 }
 
 def addMinutes(mydate, minsAdd) {
-    use ( TimeCategory ) {
-        return mydate + minsAdd.minutes
-    }
+        return mydate.plusMinutes(minsAdd)
 }
+
 def raccmd() {
     return '"' + env.JN_INSTALLATION_DIR_1C + '\\' + env.JN_PLATFORM_1C_VERSION + '\\bin\\rac.exe" ' + env.JN_tst_CLUSTER_1C_HOST + ' '
 }
