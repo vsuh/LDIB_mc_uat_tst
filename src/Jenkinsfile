@@ -51,7 +51,7 @@ pipeline {
       }
       steps {script{
         echo '*** запуск `oscript make_sql_script.os` ${env.WORKSPACE}'
-        Common.cmd('oscript oscript testIB-restore-sql\create-script.os mc_uat_tst mc_uat ${SCRIPT}')
+        Common.cmd('oscript oscript testIB-restore-sql/create-script.os mc_uat_tst mc_uat ${SCRIPT}')
         Common.cmd('type ${SCRIPT}')
       }}
     }
