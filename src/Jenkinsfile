@@ -3,7 +3,8 @@ def ib = env.JOB_BASE_NAME
 def CLADDR
 def CLPORT
 def SCRIPT
-
+def clstID
+def ibID
 
 pipeline {
   options { timestamps() }
