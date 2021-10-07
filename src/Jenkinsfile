@@ -50,6 +50,7 @@ pipeline {
           label 'obr-app-10'
       }
       steps {script{
+        Common.cmd("dir testIB-restore-sql/*.*")
         echo '*** запуск `oscript make_sql_script.os` ${env.WORKSPACE}'
         Common.cmd('oscript testIB-restore-sql/create-script.os mc_uat_tst mc_uat ${SCRIPT}')
         Common.cmd('type ${SCRIPT}')
