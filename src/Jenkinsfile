@@ -66,6 +66,7 @@ pipeline {
   }
   post {
      always { script {
+        myENV   = load './lib/SetEnvironment.groovy'
         echo '+++ снятие блокировки с ИБ'
 
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')

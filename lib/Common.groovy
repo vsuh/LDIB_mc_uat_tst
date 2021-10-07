@@ -12,6 +12,13 @@ def exportEnvironmentVariablePrefix() {
     }    
 }
 
+def rac(ver){
+    if (isUnix()) {
+        return "export"
+    } else {  
+        return "SET"
+    }
+}
 def assertWithEcho(booleanExpression, errorMessage, successMessage = "") {    
 
     if (booleanExpression != true) {        

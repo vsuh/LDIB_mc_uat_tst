@@ -41,7 +41,7 @@ def deleteConnectionsIBbyID(rasHostnameOrIP, rasPort, clusterId, databaseId, cls
 def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, databaseId, ibAdmin, ibPwd, lockMessage, lockCode) {
 
     def TimeNow = Common.TimeNow()
-    def NowPlus5min = '20210926T190500'
+    def NowPlus5min =  Common.formatDate(Common.addMinutes(Common.TimeNow(), 5))
     if (databaseId != "") {
         def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --denied-from=${TimeNow} --denied-to=${NowPlus5min} --permission-code=\"${lockCode}\" --denied-message=\"${lockMessage}\"  --sessions-deny=\"on\" --scheduled-jobs-deny=\"on\""
 
