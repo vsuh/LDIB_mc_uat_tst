@@ -65,7 +65,8 @@ pipeline {
 
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
               ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            bat('deployka help')
+//            bat('deployka session help')
+              DB.unlockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD)
           }
     }}
   }
