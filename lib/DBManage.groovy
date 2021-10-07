@@ -4,7 +4,7 @@ def Common
 
 def clusterIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterName1C) {
     
-    def command = "${env.JN_INSTALLATION_DIR_1C}/rac  ${rasHostnameOrIP}:${rasPort} cluster list | grep -B1 '${clusterName1C}' | head -1 | tr -d ' ' | cut -d ':' -f 2"
+    def command = "${env.JN_RAC}  ${rasHostnameOrIP}:${rasPort} cluster list | grep -B1 '${clusterName1C}' | head -1 | tr -d ' ' | cut -d ':' -f 2"
     def clusterId = Common.cmdReturnStdout(command)
     clusterId = clusterId.trim()
 
@@ -17,7 +17,7 @@ def clusterIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterName1C) {
 
 def databaseIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterId, databaseName1C, clstAdmin, clstPasswd) {
 
-    def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort} infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd} summary list | grep -B1 '${databaseName1C}' | head -1 | tr -d ' ' | cut -d ':' -f 2"
+    def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort} infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd} summary list | grep -B1 '${databaseName1C}' | head -1 | tr -d ' ' | cut -d ':' -f 2"
     def databaseId = Common.cmdReturnStdout(command)
     databaseId = databaseId.trim()
 
@@ -29,7 +29,7 @@ def databaseIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterId, databaseName1
 
 def deleteConnectionsIBbyID(rasHostnameOrIP, rasPort, clusterId, databaseId, clstAdmin, clstPasswd) {
    if (databaseId != "") {
-        def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin}  --cluster-pwd ${clstPasswd} list --infobase=${databaseId} | grep 'session ' | tr -d ' ' | cut -d ':' -f 2 | while read line ; do  ${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  terminate --session=\$line; done"
+        def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin}  --cluster-pwd ${clstPasswd} list --infobase=${databaseId} | grep 'session ' | tr -d ' ' | cut -d ':' -f 2 | while read line ; do  ${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  terminate --session=\$line; done"
 
         if (env.JN_VERBOSE == "true")
             echo "VERBOSE: " + command
@@ -43,7 +43,7 @@ def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, datab
     def TimeNow = Common.TimeNow()
     def NowPlus5min =  Common.formatDate(Common.addMinutes(Common.TimeNow(), 5))
     if (databaseId != "") {
-        def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --denied-from=${TimeNow} --denied-to=${NowPlus5min} --permission-code=\"${lockCode}\" --denied-message=\"${lockMessage}\"  --sessions-deny=\"on\" --scheduled-jobs-deny=\"on\""
+        def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --denied-from=${TimeNow} --denied-to=${NowPlus5min} --permission-code=\"${lockCode}\" --denied-message=\"${lockMessage}\"  --sessions-deny=\"on\" --scheduled-jobs-deny=\"on\""
 
         if (env.JN_VERBOSE == "true")
             echo "VERBOSE: " + command
@@ -55,7 +55,7 @@ def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, datab
 
 def unlockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, databaseId, ibAdmin, ibPwd) {
     if (databaseId != "") {
-        def command = "${env.JN_INSTALLATION_DIR_1C}/rac ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --sessions-deny=\"off\" "
+        def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --sessions-deny=\"off\" "
         if (env.JN_VERBOSE == "true")
             echo "VERBOSE: " + command
         Common.cmd(command)

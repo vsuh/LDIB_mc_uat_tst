@@ -16,11 +16,13 @@ if (isUnix()) {
     env.JN_THICK_CLIENT_1C = env.JN_INSTALLATION_DIR_1C + "/1cv8"
     env.JN_THICK_CLIENT_1C_FOR_STORAGE = env.JN_THICK_CLIENT_1C
     env.JN_ONE_SCRIPT_PATH="/usr/bin/oscript"
+    env.JN_RAC = env.JN_INSTALLATION_DIR_1C + "/rac"
 } else {
     env.JN_INSTALLATION_DIR_1C = "C:/Program Files/1cv8"
     env.JN_ONE_SCRIPT_PATH="C:/Program Files (x86)/OneScript/oscript.exe"
     env.JN_THICK_CLIENT_1C = env.JN_INSTALLATION_DIR_1C + "/" + env.JN_PLATFORM_1C_VERSION + "/bin/1cv8.exe"
     env.JN_THICK_CLIENT_1C_FOR_STORAGE = env.JN_INSTALLATION_DIR_1C + "/" + env.JN_PLATFORM_1C_VERSION_FOR_STORAGE + "/bin/1cv8.exe"
+    env.JN_RAC = env.JN_INSTALLATION_DIR_1C + "/" + env.JN_PLATFORM_1C_VERSION + "/bin/rac.exe"
 }
 
 // Здесь можно написать например  if(env.JN_HOSTNAME == "node1") { env.JN_SQL_SERVER = "node2" }
