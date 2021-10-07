@@ -65,7 +65,7 @@ pipeline {
 
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
               ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            bat('deployka')
+            bat('deployka help')
           }
     }}
   }
