@@ -27,6 +27,7 @@ pipeline {
           DB      = load './lib/DBManage.groovy'
           CLADDR  = env.JN_tst_RAS_HOST
           CLPORT  = env.JN_tst_RAS_PORT
+          SCRIPT = "${env.WORKSPACE}/SQLscript.txt"
 
           echo '*** Блокирование ИБ "' + ib + '", отключение сеансов ' + Common.TimeNow()
           echo '+++++++++++++++++++++++++++++++++++ ' + Common.addMinutes(Common.TimeNow(), 5)
@@ -49,11 +50,15 @@ pipeline {
           label 'obr-app-10'
       }
       steps {script{
-        echo '*** запуск `oscript make_sql_script.os`'
-        Common.cmd('oscript')
+        echo '*** запуск `oscript make_sql_script.os` ${env.WORKSPACE}'
+        Common.cmd('oscript oscript testIB-restore-sql\create-script.os mc_uat_tst mc_uat ${SCRIPT}')
+        Common.cmd('type ${SCRIPT}')
       }}
     }
-    stage( 'stage 1. загрузка бэкапа в ИБ') {
+    stage( 'stage 4. загрузка бэкапа в ИБ') {
+      agent {
+          label 'obr-app-10'
+      }
       steps {
         echo '*** выполнение скрипта `sqlcmd scriptname.sql` :::: ' + '"' + cmdString + '"'
       }
