@@ -1,5 +1,9 @@
 def cmdString // global variable
 def ib = env.JOB_BASE_NAME
+def CLADDR
+def CLPORT
+def SCRIPT
+
 
 pipeline {
   options { timestamps() }
@@ -50,10 +54,11 @@ pipeline {
           label 'obr-app-10'
       }
       steps {script{
-        Common.cmd("dir testIB-restore-sql/*.*")
+        cmdString = "${env.WORKSPACE}/sql_script.txt"
+        Common.cmd("dir ./testIB-restore-sql/*.*")
         echo '*** запуск `oscript make_sql_script.os` ${env.WORKSPACE}'
-        Common.cmd('oscript testIB-restore-sql/create-script.os mc_uat_tst mc_uat ${SCRIPT}')
-        Common.cmd('type ${SCRIPT}')
+        Common.cmd('oscript ./testIB-restore-sql/create-script.os mc_uat_tst mc_uat ${cmdString}')
+        Common.cmd('type ${cmdString}')
       }}
     }
     stage( 'stage 4. загрузка бэкапа в ИБ') {
@@ -61,20 +66,20 @@ pipeline {
           label 'obr-app-10'
       }
       steps {
-        echo '*** выполнение скрипта `sqlcmd scriptname.sql` :::: ' + '"' + cmdString + '"'
+        echo '*** выполнение скрипта `sqlcmd ${cmdString}` :::: ' + '"' + cmdString + '"'
       }
     }
   }
   post {
      always { script {
-        myENV   = load './lib/SetEnvironment.groovy'
         echo '+++ снятие блокировки с ИБ'
 
-          withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
-              ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-//            bat('deployka session help')
-              DB.unlockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD)
-          }
+        myENV   = load './lib/SetEnvironment.groovy'
+        withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+            ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+        //            bat('deployka session help')
+            DB.unlockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD)
+        }
     }}
   }
 }
