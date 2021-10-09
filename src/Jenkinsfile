@@ -46,6 +46,7 @@ pipeline {
             DB.deleteConnectionsIBbyID(CLADDR, CLPORT, clstID, ibID, clADMIN, clPASSWD)
             DB.lockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message, "0008")
           }
+        echo "[[[[[[[[[[[[[[[[[[[clstID: ${clstID} ]]]]]]]]]]]]]] RAC = ${env.JN_RAC} ]]]]]]]]]]]]]"
         }
       }
     }
