@@ -22,7 +22,7 @@ pipeline {
     }
     stage ('stage 2. Подготовка ИБ') {
       agent {
-        label 'linux'
+        label 'obr-app-10'
       }
         steps {
         script {
@@ -49,7 +49,6 @@ pipeline {
         }
       }
     }
-
     stage( 'stage 3. формирование скрипта загрузки') {
       agent {
           label 'obr-app-10'
