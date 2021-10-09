@@ -71,16 +71,16 @@ pipeline {
       }
     }
   }
-  post {
-     always { script {
-        echo '+++ снятие блокировки с ИБ'
+  // post {
+  //    always { script {
+  //       echo '+++ снятие блокировки с ИБ'
 
-        myENV   = load './lib/SetEnvironment.groovy'
-        withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
-            ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-        //            bat('deployka session help')
-            DB.unlockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD)
-        }
-    }}
-  }
+  //       myENV   = load './lib/SetEnvironment.groovy'
+  //       withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+  //           ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+  //       //            bat('deployka session help')
+  //           DB.unlockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD)
+  //       }
+  //   }}
+  // }
 }
