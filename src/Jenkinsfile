@@ -48,8 +48,8 @@ pipeline {
           timeout(time: 3, unit: 'MINUTES') {
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
               ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            clstID = DB.clusterIdentifierFromRAS(CLADDR, CLPORT, env.JN_tst_CLUSTER_1C_HOST)
-            ibID = DB.databaseIdentifierFromRAS(CLADDR, CLPORT, clstID, ib, clADMIN, clPASSWD)
+            def clstID = DB.clusterIdentifierFromRAS(CLADDR, CLPORT, env.JN_tst_CLUSTER_1C_HOST)
+            def ibID = DB.databaseIdentifierFromRAS(CLADDR, CLPORT, clstID, ib, clADMIN, clPASSWD)
             DB.deleteConnectionsIBbyID(CLADDR, CLPORT, clstID, ibID, clADMIN, clPASSWD)
             DB.lockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message, "0008")
           }
