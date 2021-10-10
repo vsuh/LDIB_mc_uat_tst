@@ -4,12 +4,13 @@ def Common
 def clusterIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterName1C) {
     def command = "${env.JN_RAC}  ${rasHostnameOrIP}:${rasPort} cluster list | grep -B1 '${clusterName1C}' | head -1 | tr -d ' ' | cut -d ':' -f 2"
 
-    if (env.JN_VERBOSE == 'true') {
-        echo 'VERBOSE: ' + clusterId
-    }
-
     def clusterId = Common.cmdReturnStdout(command)
     clusterId = clusterId.trim()
+
+    if (env.JN_VERBOSE == 'true') {
+        echo 'VERBOSE: clusterId = ' + clusterId
+    }
+
     return clusterId
 }
 
@@ -19,7 +20,7 @@ def databaseIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterId, databaseName1
     databaseId = databaseId.trim()
 
     if (env.JN_VERBOSE == 'true') {
-        echo 'VERBOSE: ' + databaseId
+        echo 'VERBOSE: databaseId = ' + databaseId
     }
 
     return databaseId
@@ -30,7 +31,7 @@ def deleteConnectionsIBbyID(rasHostnameOrIP, rasPort, clusterId, databaseId, cls
         def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin}  --cluster-pwd ${clstPasswd} list --infobase=${databaseId} | grep 'session ' | tr -d ' ' | cut -d ':' -f 2 | while read line ; do  ${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  session --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  terminate --session=\$line; done"
 
         if (env.JN_VERBOSE == 'true') {
-            echo 'VERBOSE: ' + command
+            echo 'VERBOSE: cmd = ' + command
         }
         Common.cmd(command)
     }
@@ -43,7 +44,7 @@ def lockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, datab
         def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --denied-from=${TimeNow} --denied-to=${NowPlus5min} --permission-code=\"${lockCode}\" --denied-message=\"${lockMessage}\"  --sessions-deny=\"on\" --scheduled-jobs-deny=\"on\""
 
         if (env.JN_VERBOSE == 'true') {
-            echo 'VERBOSE: ' + command
+            echo 'VERBOSE: cmd = ' + command
         }
 
         Common.cmd(command)
@@ -55,7 +56,7 @@ def unlockIBbyID(rasHostnameOrIP, rasPort, clusterId, clstAdmin, clstPasswd, dat
     if (databaseId != '') {
         def command = "${env.JN_RAC} ${rasHostnameOrIP}:${rasPort}  infobase --cluster ${clusterId} --cluster-user ${clstAdmin} --cluster-pwd ${clstPasswd}  update --infobase=${databaseId}  --infobase-user=${ibAdmin} --infobase-pwd=${ibPwd}  --sessions-deny=\"off\" "
         if (env.JN_VERBOSE == 'true') {
-            echo 'VERBOSE: ' + command
+            echo 'VERBOSE: cmd = ' + command
         }
         Common.cmd(command)
     }
