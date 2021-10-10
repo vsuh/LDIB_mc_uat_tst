@@ -8,7 +8,7 @@ def clusterIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterName1C) {
         echo 'VERBOSE: ' + clusterId
     }
 
-    clusterId = Common.cmdReturnStdout(command)
+    def clusterId = Common.cmdReturnStdout(command)
     clusterId = clusterId.trim()
     return clusterId
 }
