@@ -11,6 +11,9 @@ pipeline {
   agent { label 'obr-app-10' }
   stages {
     stage ( 'stage 1. Подготовка среды') {
+      options {
+        timeout(time: 1, unit: 'MINUTES')
+      }
       steps {
         script {
           echo '*** Инициализация среды и библиотек'
@@ -23,6 +26,9 @@ pipeline {
     stage ('stage 2. Подготовка ИБ') {
       agent {
         label 'obr-app-10'
+      }
+      options {
+        timeout(time: 2, unit: 'MINUTES')
       }
         steps {
         script {
@@ -39,12 +45,14 @@ pipeline {
           // echo '################################### ' + Common.formatDate(Common.addMinutes(Common.TimeNow(), 5))
 
           message = "Производится загрузка ИБ ${ib} из резервной копии"
+          timeout(time: 3, unit: 'MINUTES') {
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
               ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             clstID = DB.clusterIdentifierFromRAS(CLADDR, CLPORT, env.JN_tst_CLUSTER_1C_HOST)
             ibID = DB.databaseIdentifierFromRAS(CLADDR, CLPORT, clstID, ib, clADMIN, clPASSWD)
             DB.deleteConnectionsIBbyID(CLADDR, CLPORT, clstID, ibID, clADMIN, clPASSWD)
             DB.lockIBbyID(CLADDR, CLPORT, clstID, clADMIN, clPASSWD, ibID, ibADMIN, ibPASSWORD, message, "0008")
+          }
           }
         echo "[[[[[[[[[[[[[[[[[[[clstID: ${clstID} ]]]]]]]]]]]]]] RAC = ${env.JN_RAC} ]]]]]]]]]]]]]"
         }
@@ -53,6 +61,9 @@ pipeline {
     stage( 'stage 3. формирование скрипта загрузки') {
       agent {
           label 'obr-app-10'
+      }
+      options {
+        timeout(time: 2, unit: 'MINUTES')
       }
       steps {script{
         cmdString = "${env.WORKSPACE}/sql_script.txt"
@@ -65,6 +76,9 @@ pipeline {
     stage( 'stage 4. загрузка бэкапа в ИБ') {
       agent {
           label 'obr-app-10'
+      }
+      options {
+        timeout(time: 4, unit: 'HOURS')
       }
       steps {
         echo '*** выполнение скрипта `sqlcmd ${cmdString}` :::: ' + '"' + cmdString + '"'
