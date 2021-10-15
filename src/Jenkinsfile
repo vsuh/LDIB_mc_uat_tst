@@ -3,25 +3,27 @@ def CLADDR = 'obr-app-13'
 
 pipeline {
   agent{ label 'mini' }
-  stages ( '1. Подготовка' ){
-    steps {
-      script {
+  stages{
+    stage ( '1. Подготовка' ){
+      steps {
+        script {
 
-        withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
-            ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-          def command = """vrunner dbinfo 
-            --ras ${CLADDR} 
-            --ibconnection /s${CLADDR}\${ib} 
-            --db ${ib} 
-            --cluster-admin ${clADMIN} 
-            --cluster-pwd ${clPASSWD} 
-            --db-user ${ibADMIN} 
-            --db-pwd ${ibPASSWORD}
-          """
-          command.replace("\n", " ")
-          echo ""command
-          bat """chcp 65001 > nul
-                    ${command}"""
+          withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+              ,usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = """vrunner dbinfo 
+              --ras ${CLADDR} 
+              --ibconnection /s${CLADDR}\${ib} 
+              --db ${ib} 
+              --cluster-admin ${clADMIN} 
+              --cluster-pwd ${clPASSWD} 
+              --db-user ${ibADMIN} 
+              --db-pwd ${ibPASSWORD}
+            """
+            command.replace("\n", " ")
+            echo ""command
+            bat """chcp 65001 > nul
+                      ${command}"""
+          }
         }
       }
     }
