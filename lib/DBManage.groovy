@@ -5,6 +5,7 @@ def clusterIdentifierFromRAS(rasHostnameOrIP, rasPort, clusterName1C) {
     def command = "${env.JN_RAC}  ${rasHostnameOrIP}:${rasPort} cluster list | grep -B1 '${clusterName1C}' | head -1 | tr -d ' ' | cut -d ':' -f 2"
 
     def clusterId = Common.cmdReturnStdout(command)
+    echo "[-- " + clusterId + " --]"
     clusterId = clusterId.trim()
 
     if (env.JN_VERBOSE == 'true') {
