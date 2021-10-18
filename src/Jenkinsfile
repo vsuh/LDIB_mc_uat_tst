@@ -27,7 +27,7 @@ pipeline {
                 """
 
           command = command.replace("\n", " ")
-//          echo "command: " + command
+          echo "command: " + command
 
           bat """chcp 65001
               ${ command } """
