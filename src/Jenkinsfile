@@ -12,6 +12,7 @@ pipeline {
     VER1C = '8.3.18.1483'
     enCode = '0008'
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
+    IbTitle = "${LIB.strIbTitle(ib)}"
 
   }
   stages {
@@ -97,7 +98,7 @@ pipeline {
           def title = LIB.strIbTitle(ib)
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
-                --command ${title}
+                --command ${IbTitle}
                 --ibconnection /s${CLADDR}\\${ib}
                 --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
