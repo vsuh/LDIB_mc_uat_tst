@@ -82,7 +82,7 @@ pipeline {
       steps {
         script {
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i ${scPath} -o COMMAND.4.out"
+            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o COMMAND.4.out"
             echo "command: " + command
             bat "echo "+ command + " > COMMAND.4.txt"
             bat """chcp 65001
