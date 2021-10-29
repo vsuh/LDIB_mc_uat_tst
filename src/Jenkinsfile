@@ -17,7 +17,7 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-	  echo Проверка наличия oscript.exe в пути
+	  echo "Проверка наличия oscript.exe в PATH"
           try {
             bat "chcp 65001\nOSCRIPT2.exe"
           } catch (e) {
