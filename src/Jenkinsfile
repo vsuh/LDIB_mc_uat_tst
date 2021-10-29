@@ -21,7 +21,8 @@ pipeline {
           try {
             bat "chcp 65001\nOSCRIPT2.exe"
           } catch (e) {
-            echo "Не удалось выполнить OSCRIPT: "+ e.toString()
+            currentBuild.result = 'ABORTED'
+            error("Не удалось найти OSCRIPT.exe: "+ e.toString())
           }
           bat "chcp 65001>nul\nif not exist log md log"
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
