@@ -4,7 +4,7 @@ pipeline {
   environment {
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
-    tb = ib[0..5]
+    tb = ${ib[0..5]}
     cs = 'lib/create-script.os'
     CLADDR = 'obr-app-13'
     SQLSRV = 'obr-sql-01'
