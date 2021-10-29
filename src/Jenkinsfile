@@ -11,7 +11,7 @@ pipeline {
     SQLbackup = '\\\\192.168.3.56\\backup'
     VER1C = '8.3.18.1483'
     enCode = '0008'
-    scPath = "${env.WORKSPACE}\\SQL_${ib}.SQLscript"
+    scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
 
   }
   stages {
