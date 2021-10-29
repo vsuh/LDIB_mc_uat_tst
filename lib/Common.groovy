@@ -2,6 +2,11 @@ import groovy.time.TimeCategory
 import java.time.*
 import java.time.format.*
 import java.text.SimpleDateFormat
+// telegram
+@Grab('com.github.groovy-wslite:groovy-wslite:1.1.2')
+import wslite.http.auth.*
+import wslite.rest.*
+
 
 def exportEnvironmentVariablePrefix() {
 
@@ -321,12 +326,18 @@ def raccmd() {
     return '"' + env.JN_INSTALLATION_DIR_1C + '\\' + env.JN_PLATFORM_1C_VERSION + '\\bin\\rac.exe" ' + env.JN_tst_CLUSTER_1C_HOST + ' '
 }
 
-def strIbTitle(ib) {
+def strIbTitle(ib='') {
     def strDate = formatDate(TimeNow, "dd.MM.yyyy")
     if (ib.toString()[0..5].toUpperCase() == "MC_BNU") { return "копия КИСУ от " + strDate + "" } 
     else if (ib.toString()[0..5].toUpperCase() == "MC_ZUP") {return "копия ЗУП КОРП от " + strDate + ""}
     else if (ib.toString()[0..5].toUpperCase() == "MC_UAT") {return "копия УАТ от " + strDate + ""}
     else {return "копия " + ib.toString()[0..5].toUpperCase() + " от " + strDate + ""}
 }
+
+def tgNote() {
+
+}
+
+
 // Return this module as Groovy object 
 return this

@@ -94,9 +94,10 @@ pipeline {
         stage ('5. Установка константы заголовок ИБ') {
       steps {
         script {
+          def title = LIB.strIbTitle(ib)
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
-                --command "${LIB.strIbTitle(ib)}"
+                --command ${title}
                 --ibconnection /s${CLADDR}\\${ib}
                 --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
