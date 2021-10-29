@@ -4,7 +4,7 @@ pipeline {
   environment {
     ib = "${JOB_BASE_NAME}"
     tb = ib.replace('_tst', '')
-    cs = '/1c/cmd/bat/testIB-restore-sql/create-script.os'
+    cs = 'lib/create-script.os'
     CLADDR = 'obr-app-13'
     SQLSRV = 'obr-sql-01'
     SQLbackup = '\\\\192.168.3.56\\backup'
@@ -14,25 +14,32 @@ pipeline {
 
   }
   stages {
-    stage('1. Подготовка') {
+    stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          bat "md log"
+	  echo Проверка наличия oscript.exe в пути
+          try {
+            bat "chcp 65001\nOSCRIPT2.exe"
+          } catch (e) {
+            echo "Не удалось выполнить OSCRIPT: "+ e.toString()
+          }
+          bat "chcp 65001>nul\nif not exist log md log"
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
             , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner session kill --ras ${CLADDR}
-                --cluster-admin ${ clADMIN } --cluster-pwd ${ clPASSWD }
-                --ibconnection /s${ CLADDR }\\${ ib }
-                --db ${ ib } --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
-                --uccode ${ enCode } --v8version ${ VER1C }
-                """
+                --cluster-admin ${clADMIN} --cluster-pwd ${clPASSWD}
+                --ibconnection /s${CLADDR}\\${ib}
+                --db ${ib} --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
+                --uccode ${enCode} --v8version ${VER1C}
+                """.replaceAll( /\n\s*/, " " )
 
-          command = command.replace("\n", " ")
-//          bat "echo "+ command + " > COMMAND.1.txt"
+
+          bat "echo "+ command + " > COMMAND.1.txt"
           echo "command: " + command
-
-          bat """chcp 65001
+          timeout (10) {
+            bat """chcp 65001
               ${ command } """
+          }
           }
         }
       }
@@ -61,9 +68,11 @@ pipeline {
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
            echo "command: " + command
 
-//          bat "echo "+ command + " > COMMAND.3.txt"
-           bat """chcp 65001
+          bat "echo "+ command + " > COMMAND.3.txt"
+          timeout(10) {
+            bat """chcp 65001
                 ${ command } """
+          }
         }
       }
     }
@@ -71,15 +80,37 @@ pipeline {
       steps {
         script {
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i ${scPath}"
+            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i ${scPath} -o RESULT.4.txt"
             echo "command: " + command
-//            bat "echo "+ command + " > COMMAND.4.txt"
+            bat "echo "+ command + " > COMMAND.4.txt"
             bat """chcp 65001
             ${ command } """
           }
         }
       }
     }
+        stage ('5. Установка константы заголовок ИБ') {
+      steps {
+        script {
+          withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
+                --command "УАТ копия от 11-45-2023"
+                --ibconnection /s${CLADDR}\\${ib}
+                --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
+                --uccode ${enCode} --v8version ${VER1C}
+                --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
+                """.replaceAll( /\n\s*/, " " )
+            echo "command: " + command
+            bat "echo "+ command + " > COMMAND.5.txt"
+            timeout(10) {
+                bat """chcp 65001
+                ${ command } """
+            }
+          }
+        }
+      }
+    }
+
   }
   post {
     always { script {
@@ -93,14 +124,13 @@ pipeline {
             --db ${ ib } --db-user ${ ibADMIN }
             --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode }
-            --v8version ${ VER1C } """
+            --v8version ${ VER1C }
+            """.replaceAll( /\n\s*/, " " )
 
-            command = command.replace("\n", " ")
-            command = command.replace("\t", " ")
-            command = command.replace("  ", " ")
+
             echo "command: " + command
 
-//          bat "echo "+ command + " > COMMAND.P.txt"
+            bat "echo "+ command + " > COMMAND.P.txt"
 
             bat """chcp 65001>nul
                 $command"""

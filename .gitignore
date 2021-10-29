@@ -1,5 +1,4 @@
 .env
 *.log
-auth/
-src/Jenkinsfile.1
 log/
+COMMAND.*
