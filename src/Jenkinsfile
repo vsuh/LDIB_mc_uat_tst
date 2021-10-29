@@ -11,7 +11,7 @@ pipeline {
     SQLbackup = '\\\\192.168.3.56\\backup'
     VER1C = '8.3.18.1483'
     enCode = '0008'
-    scPath = "\\tmp\\SQL_${ib}.SQLscript"
+    scPath = "${env.WORKSPACE}\\SQL_${ib}.SQLscript"
 
   }
   stages {
@@ -82,7 +82,7 @@ pipeline {
       steps {
         script {
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i ${scPath} -o RESULT.4.txt"
+            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i ${scPath} -o COMMAND.4.out"
             echo "command: " + command
             bat "echo "+ command + " > COMMAND.4.txt"
             bat """chcp 65001
