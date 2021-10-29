@@ -97,7 +97,7 @@ pipeline {
         script {
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
-                --command ${IbTitle}
+                --command \"${IbTitle}\"
                 --ibconnection /s${CLADDR}\\${ib}
                 --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
