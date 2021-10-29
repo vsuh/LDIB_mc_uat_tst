@@ -326,7 +326,7 @@ def raccmd() {
 }
 
 def strIbTitle(ib='') {
-    def strDate = formatDate(TimeNow, "dd.MM.yyyy")
+    def strDate = formatDate(TimeNow(), "dd.MM.yyyy")
     if (ib.toString()[0..5].toUpperCase() == "MC_BNU") { return "копия КИСУ от " + strDate + "" } 
     else if (ib.toString()[0..5].toUpperCase() == "MC_ZUP") {return "копия ЗУП КОРП от " + strDate + ""}
     else if (ib.toString()[0..5].toUpperCase() == "MC_UAT") {return "копия УАТ от " + strDate + ""}
