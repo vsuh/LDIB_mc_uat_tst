@@ -3,7 +3,6 @@ import java.time.*
 import java.time.format.*
 import java.text.SimpleDateFormat
 // telegram
-@Grab('com.github.groovy-wslite:groovy-wslite:1.1.2')
 import wslite.http.auth.*
 import wslite.rest.*
 
