@@ -327,10 +327,14 @@ def raccmd() {
 
 def strIbTitle(ib='') {
     def strDate = formatDate(TimeNow(), "dd.MM.yyyy")
-    if (ib.toString()[0..5].toUpperCase() == "MC_BNU") { return "копия КИСУ от " + strDate + "" } 
-    else if (ib.toString()[0..5].toUpperCase() == "MC_ZUP") {return "копия ЗУП КОРП от " + strDate + ""}
-    else if (ib.toString()[0..5].toUpperCase() == "MC_UAT") {return "копия УАТ от " + strDate + ""}
-    else {return "копия " + ib.toString()[0..5].toUpperCase() + " от " + strDate + ""}
+    if      (ib.toString().toUpperCase() == "MC_BNU_TST") { return "SKLAD " + strDate + "" } 
+    else if (ib.toString().toUpperCase() == "MC_BNU_TWO") { return "SKLAD-2 " + strDate + "" } 
+    else if (ib.toString()[0..5].toUpperCase() == "MC_BNU") { return "${ib} " + strDate + "" } 
+    else if (ib.toString().toUpperCase() == "MC_ZUP_TST") {return "KZP " + strDate + ""}
+    else if (ib.toString().toUpperCase() == "MC_ZUP_TWO") {return "KZP-2 " + strDate + ""}
+    else if (ib.toString()[0..5].toUpperCase() == "MC_ZUP") {return "copy ZUP " + strDate + ""}
+    else if (ib.toString()[0..5].toUpperCase() == "MC_UAT") {return "copy UAT " + strDate + ""}
+    else {return "copy " + ib.toUpperCase() + " " + strDate + ""}
 }
 
 def tgNote() {
