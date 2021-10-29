@@ -321,5 +321,12 @@ def raccmd() {
     return '"' + env.JN_INSTALLATION_DIR_1C + '\\' + env.JN_PLATFORM_1C_VERSION + '\\bin\\rac.exe" ' + env.JN_tst_CLUSTER_1C_HOST + ' '
 }
 
+def strIbTitle(ib) {
+    def strDate = formatDate(TimeNow, "dd.MM.yyyy")
+    if (ib.toString()[0..5].toUpperCase() == "MC_BNU") { return "копия КИСУ от " + strDate + "" } 
+    else if (ib.toString()[0..5].toUpperCase() == "MC_ZUP") {return "копия ЗУП КОРП от " + strDate + ""}
+    else if (ib.toString()[0..5].toUpperCase() == "MC_UAT") {return "копия УАТ от " + strDate + ""}
+    else {return "копия " + ib.toString()[0..5].toUpperCase() + " от " + strDate + ""}
+}
 // Return this module as Groovy object 
 return this

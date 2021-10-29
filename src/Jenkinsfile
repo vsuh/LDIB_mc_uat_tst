@@ -2,6 +2,7 @@
 pipeline {
   agent{ label 'mini' }
   environment {
+    LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
     tb = ib.replace('_tst', '')
     cs = 'lib/create-script.os'
@@ -19,7 +20,7 @@ pipeline {
         script {
 	  echo "Проверка наличия oscript.exe в PATH"
           try {
-            bat "chcp 65001\nOSCRIPT2.exe"
+            bat "chcp 65001\nOSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
@@ -95,7 +96,7 @@ pipeline {
         script {
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
-                --command "УАТ копия от 11-45-2023"
+                --command "${LIB.strIbTitle(ib)}"
                 --ibconnection /s${CLADDR}\\${ib}
                 --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
