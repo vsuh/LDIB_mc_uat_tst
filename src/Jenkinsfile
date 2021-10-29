@@ -5,6 +5,7 @@ pipeline {
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
     tb = "${ib[0..5]}"
+    IbTitle = LIB.strIbTitle(ib)
     cs = 'lib/create-script.os'
     CLADDR = 'obr-app-13'
     SQLSRV = 'obr-sql-01'
@@ -12,7 +13,6 @@ pipeline {
     VER1C = '8.3.18.1483'
     enCode = '0008'
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
-    IbTitle = "${LIB.strIbTitle(ib)}"
 
   }
   stages {
