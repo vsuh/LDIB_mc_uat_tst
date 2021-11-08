@@ -20,9 +20,8 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          echo "Проверка необходимости запуска [[[" + runAllowed.toLowerCase() + "]]]"
-          def val = LIB.getValueRedis(ib)
-          if (val.toLowerCase() == 'false') {
+          echo "Проверка необходимости запуска "
+          if (runAllowed.toLowerCase() == 'false') {
             error "Запуск запрещен настройками"            
           }
 	        echo "Проверка наличия oscript.exe в PATH"
