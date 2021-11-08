@@ -300,14 +300,14 @@ def raccmd() {
 
 def strIbTitle(ib='') {
     def strDate = formatDate(TimeNow(), 'dd.MM.yyyy')
-    if (ib.toString().toUpperCase() == 'MC_BNU_TST') { return 'SKLAD ' + strDate + '' }
-        else if (ib.toString().toUpperCase() == 'MC_BNU_TWO') { return 'SKLAD-2 ' + strDate + '' }
-        else if (ib.toString()[0..5].toUpperCase() == 'MC_BNU') { return "${ib} " + strDate + '' }
-        else if (ib.toString().toUpperCase() == 'MC_ZUP_TST') { return 'KZP ' + strDate + '' }
-        else if (ib.toString().toUpperCase() == 'MC_ZUP_TWO') { return 'KZP-2 ' + strDate + '' }
-        else if (ib.toString()[0..5].toUpperCase() == 'MC_ZUP') { return 'copy ZUP ' + strDate + '' }
-        else if (ib.toString()[0..5].toUpperCase() == 'MC_UAT') { return 'copy UAT ' + strDate + '' }
-        else { return 'copy ' + ib.toUpperCase() + ' ' + strDate + '' }
+    if (ib.toString().toUpperCase() == 'MC_BNU_TST') { return 'SKLAD '}
+        else if (ib.toString().toUpperCase() == 'MC_BNU_TWO') { return 'SKLAD-2 '}
+        else if (ib.toString()[0..5].toUpperCase() == 'MC_BNU') { return "${ib} "}
+        else if (ib.toString().toUpperCase() == 'MC_ZUP_TST') { return 'KZP '}
+        else if (ib.toString().toUpperCase() == 'MC_ZUP_TWO') { return 'KZP-2 '}
+        else if (ib.toString()[0..5].toUpperCase() == 'MC_ZUP') { return 'copy ZUP '}
+        else if (ib.toString()[0..5].toUpperCase() == 'MC_UAT') { return 'copy UAT '}
+        else { return 'copy ' + ib.toUpperCase() + ' '}
 }
 
 def getValueRedis(key) {
