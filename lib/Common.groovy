@@ -310,11 +310,10 @@ def strIbTitle(ib='') {
         else { return 'copy ' + ib.toUpperCase() + ' ' + strDate + '' }
 }
 
-def tgNote() {
-}
-
-
-def getValueRedis(key, host='obr-app-00', port=6379, db=3) {
+def getValueRedis(key) {
+    def host = 'obr-app-00'
+    def port = 6379
+    def db = 3
     Jedis jedis = new Jedis(host, port)
     jedis.select(db)
     String result = jedis.get(key)
