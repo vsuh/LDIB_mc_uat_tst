@@ -20,8 +20,8 @@ pipeline {
       steps {
         script {
           echo "Проверка необходимости запуска"
-          val = LIB.getValueRedis(ib)
-          if (val == "False") {
+          String val = LIB.getValueRedis(ib)
+          if (val.toLowerCase() == 'false') {
             error "Запуск запрещен настройками"            
           }
 	        echo "Проверка наличия oscript.exe в PATH"
