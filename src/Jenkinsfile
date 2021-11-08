@@ -20,7 +20,7 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          echo "Проверка необходимости запуска"
+          echo "Проверка необходимости запуска [[[" + runAllowed.toLowerCase() + "]]]"
           def val = LIB.getValueRedis(ib)
           if (val.toLowerCase() == 'false') {
             error "Запуск запрещен настройками"            
