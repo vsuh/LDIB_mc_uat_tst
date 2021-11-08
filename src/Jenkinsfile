@@ -126,10 +126,10 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
             , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner session unlock
-            --ras ${ CLADDR }
+            --ras ${CLADDR}
             --cluster-admin ${ clADMIN }
             --cluster-pwd ${ clPASSWD }
-            --ibconnection /s${ CLADDR }\\${ ib }
+            --ibconnection /s${CLADDR}\\${ ib }
             --db ${ ib } --db-user ${ ibADMIN }
             --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode }
