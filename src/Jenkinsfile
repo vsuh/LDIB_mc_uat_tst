@@ -19,7 +19,12 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-	  echo "Проверка наличия oscript.exe в PATH"
+          echo "Проверка необходимости запуска"
+          val = LIB.getValueRedis(ib)
+          if val == "False" {
+            error "Запуск запрещен настройками"            
+          }
+	        echo "Проверка наличия oscript.exe в PATH"
           try {
             bat "chcp 65001\nOSCRIPT.exe>nul"
           } catch (e) {
