@@ -35,7 +35,9 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          if (executionCancelled) {
+          echo "executionCancelled = ${executionCancelled}"
+          if (executionCancelled == true) {
+            echo "Cancel--Cancel--Cancel"
             currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
           }
 	        echo "Проверка наличия oscript.exe в PATH"
