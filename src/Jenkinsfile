@@ -20,21 +20,15 @@ pipeline {
     stage('0. Разрешение запуска'){
       steps{
         script {
-
-          echo "---------OK(Сухих)---------" 
-          def User = currentBuild.rawBuild.getCause(Cause.UserIdCause)
-          if (null==User) {
-            def deny = bat(script: "@curl --silent -X GET http://mysql:8000/q/mc_zup_tst", returnStdout: true)
-            echo "Empty user. Denied bat: (${deny})"
-            if (deny!="on") {
-              echo "Сборка отменена (${deny})"
+          def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
+          if (null == runningUser) { // scheduled job launch
+            def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
+            if (isBatDeny != "on") {
+              echo "Сборка отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
               currentBuild.result = 'SUCCESS'
               return
               }
-          } else {
-            echo "Сборка выполняется : ${User['userId']}"
-          }
-          
+          } 
         }
       }
     }
