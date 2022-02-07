@@ -31,7 +31,7 @@ pipeline {
           
          
           echo "-------OK(vsuh)-------------"
-          echo if (getBuildUser()==null) {
+          if (getBuildUser()==null) {
             echo "AUTO"
           }
           
