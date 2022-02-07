@@ -27,8 +27,9 @@ pipeline {
           }
           
           echo "---------OK(Сухих)---------"
-          if (null==currentBuild.rawBuild.getCause(Cause.UserIdCause)) {
-            echo "AUTO"
+          def User = currentBuild.rawBuild.getCause(Cause.UserIdCause)
+          if (null==User) {
+            echo "${User['userId']} or AUTO"
           }
           
         }
