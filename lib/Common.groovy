@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat
 import wslite.http.auth.*
 import wslite.rest.*
 // redis
+@Grab(group='redis.clients', module='jedis', version='3.5.2')
 import redis.clients.jedis.Jedis
 
 def exportEnvironmentVariablePrefix() {
