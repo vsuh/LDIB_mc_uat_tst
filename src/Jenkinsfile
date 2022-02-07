@@ -24,8 +24,8 @@ pipeline {
             def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
             if (isBatDeny != "on") {
               echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
-              currentBuild.result = 'SUCCESS'
-              return
+              currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+              //return
               }
           } 
         }
