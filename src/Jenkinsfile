@@ -17,6 +17,15 @@ pipeline {
 
   }
   stages {
+    stage('0. Разрешение запуска'){
+      steps{
+        script {
+          echo "--------------------"
+          echo currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()
+          echo "--------------------"
+        }
+      }
+    }
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
