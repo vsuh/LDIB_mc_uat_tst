@@ -38,7 +38,7 @@ pipeline {
           echo "executionCancelled = ${executionCancelled}"
           if (executionCancelled == true) {
             echo "Cancel--Cancel--Cancel"
-            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+            return
           }
 	        echo "Проверка наличия oscript.exe в PATH"
           try {
