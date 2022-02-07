@@ -6,7 +6,7 @@ pipeline {
     ib = "${JOB_BASE_NAME}"
     tb = "${ib[0..5]}"
     IbTitle = LIB.strIbTitle(ib)
-    runAllowed = LIB.getValueRedis(ib)
+    // runAllowed = LIB.getValueRedis(ib)
     cs = 'lib/create-script.os'
     CLADDR = 'obr-app-13'
     SQLSRV = 'obr-sql-01'
