@@ -21,15 +21,16 @@ pipeline {
       steps{
         script {
 
-          echo "---------OK(vsuh)-----------"
-          if (currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')==null) {
-            echo "AUTO"
-          }
+          def deny = bat(script: "curl --silent -X GET http://mysql:8000/q/mc_zup_tst", returnStdout: true)
           
-          echo "---------OK(Сухих)---------"
+          echo "---------OK(Сухих):${deny}---------"
           def User = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null==User) {
-            echo "AUTO"
+            if (deny!="on") {
+            echo "Сборка отменена (${deny})"
+              currentBuild.result = 'SUCCESS'
+              return
+              }
           } else {
             echo "${User['userId']}"
           }
