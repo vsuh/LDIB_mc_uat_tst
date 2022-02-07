@@ -32,7 +32,7 @@ pipeline {
               return
               }
           } else {
-            echo "${User['userId']}"
+            echo "Сборка выполняется : ${User['userId']}"
           }
           
         }
