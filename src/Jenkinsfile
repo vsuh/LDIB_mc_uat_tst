@@ -36,6 +36,7 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
+            echo "step skipped by setting cancel"
             return
           }
 	        echo "Проверка наличия oscript.exe в PATH"
@@ -70,7 +71,8 @@ pipeline {
       steps {
         timeout(time: 1, unit: 'MINUTES') {
           script {
-            if (executionCancelled) {
+          if (executionCancelled == true) {
+              echo "step skipped by setting cancel"
               return
             }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
@@ -90,7 +92,8 @@ pipeline {
     stage ('3. Формирование скрипта загрузки') {
       steps {
         script {
-          if (executionCancelled) {
+          if (executionCancelled == true) {
+            echo "step skipped by setting cancel"
             return
           }
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
@@ -107,7 +110,8 @@ pipeline {
     stage ('4. Загрузка ИБ из бэкапа') {
       steps {
         script {
-          if (executionCancelled) {
+          if (executionCancelled == true) {
+            echo "step skipped by setting cancel"
             return
           }
 
@@ -124,7 +128,8 @@ pipeline {
     stage ('5. Установка константы заголовок ИБ') {
       steps {
         script {
-          if (executionCancelled) {
+          if (executionCancelled == true) {
+            echo "step skipped by setting cancel"
             return
           }
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
