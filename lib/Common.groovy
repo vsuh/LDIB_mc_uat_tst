@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat
 import wslite.http.auth.*
 import wslite.rest.*
 // redis
-import redis.clients.jedis.Jedis
+//import redis.clients.jedis.Jedis
 
 def exportEnvironmentVariablePrefix() {
     if (isUnix()) {
@@ -310,16 +310,16 @@ def strIbTitle(ib='') {
         else { return 'copy ' + ib.toUpperCase() + ' '}
 }
 
-def getValueRedis(key) {
-    def host = 'obr-app-00'
-    def port = 6379
-    def db = 3
-    Jedis jedis = new Jedis(host, port)
-    jedis.select(db)
-    String result = jedis.get(key)
-    jedis.close()
-    return result
-}
+// def getValueRedis(key) {
+//     def host = 'obr-app-00'
+//     def port = 6379
+//     def db = 3
+//     Jedis jedis = new Jedis(host, port)
+//     jedis.select(db)
+//     String result = jedis.get(key)
+//     jedis.close()
+//     return result
+// }
 
 // Return this module as Groovy object
 return this
