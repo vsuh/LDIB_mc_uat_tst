@@ -23,11 +23,16 @@ pipeline {
     stage('0. Разрешение запуска'){
       steps{
         script {
+
           echo "--------------------"
+          echo currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]['userId']
+          echo "--------------------"
+         
+          echo "-------OK(vsuh)-------------"
           echo getBuildUser()
           echo "--------------------"
 
-          echo "---------OK---------"
+          echo "---------OK(Сухих)---------"
           echo currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()
           echo "--------------------"
         }
