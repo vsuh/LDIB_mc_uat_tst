@@ -1,7 +1,4 @@
-@NonCPS
-def getBuildUser() {
-    return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
-}
+
 pipeline {
   agent{ label 'mini' }
   environment {
@@ -29,15 +26,8 @@ pipeline {
             echo "AUTO"
           }
           
-         
-          echo "-------OK(vsuh)-------------"
-          if (getBuildUser()==null) {
-            echo "AUTO"
-          }
-          
-
           echo "---------OK(Сухих)---------"
-          if (null==currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()) {
+          if (null==currentBuild.rawBuild.getCause(Cause.UserIdCause)) {
             echo "AUTO"
           }
           
