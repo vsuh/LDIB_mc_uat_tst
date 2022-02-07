@@ -35,9 +35,7 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          echo "executionCancelled = ${executionCancelled}"
           if (executionCancelled == true) {
-            echo "Cancel--Cancel--Cancel"
             return
           }
 	        echo "Проверка наличия oscript.exe в PATH"
@@ -73,7 +71,7 @@ pipeline {
         timeout(time: 1, unit: 'MINUTES') {
           script {
             if (executionCancelled) {
-              currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+              return
             }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
 
@@ -93,7 +91,7 @@ pipeline {
       steps {
         script {
           if (executionCancelled) {
-            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+            return
           }
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
            echo "command: " + command
@@ -110,7 +108,7 @@ pipeline {
       steps {
         script {
           if (executionCancelled) {
-            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+            return
           }
 
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
@@ -127,7 +125,7 @@ pipeline {
       steps {
         script {
           if (executionCancelled) {
-            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+            return
           }
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
