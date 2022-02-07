@@ -1,4 +1,7 @@
-
+@NonCPS
+def getBuildUser() {
+    return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
+}
 pipeline {
   agent{ label 'mini' }
   environment {
@@ -21,6 +24,10 @@ pipeline {
       steps{
         script {
           echo "--------------------"
+          echo getBuildUser()
+          echo "--------------------"
+
+          echo "---------OK---------"
           echo currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()
           echo "--------------------"
         }
