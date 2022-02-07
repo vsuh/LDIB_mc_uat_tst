@@ -29,10 +29,10 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          echo "Проверка необходимости запуска "
-          if (runAllowed.toLowerCase() == 'false') {
-            error "Запуск запрещен настройками"            
-          }
+          // echo "Проверка необходимости запуска "
+          // if (runAllowed.toLowerCase() == 'false') {
+          //   error "Запуск запрещен настройками"            
+          // }
 	        echo "Проверка наличия oscript.exe в PATH"
           try {
             bat "chcp 65001\nOSCRIPT.exe>nul"
@@ -131,7 +131,7 @@ pipeline {
   }
   post {
     always { script {
-      if (runAllowed.toLowerCase() != 'false') {
+      // if (runAllowed.toLowerCase() != 'false') {
         withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
             , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner session unlock
@@ -153,7 +153,7 @@ pipeline {
             bat """chcp 65001>nul
                 $command"""
         }
-      }
+      // }
     }}
   }
 }
