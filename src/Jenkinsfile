@@ -25,16 +25,22 @@ pipeline {
         script {
 
           echo "---------OK(vsuh)-----------"
-          echo (currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')==null)
-          echo "--------------------"
+          if (currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')==null) {
+            echo "AUTO"
+          }
+          
          
           echo "-------OK(vsuh)-------------"
-          echo (getBuildUser()==null)
-          echo "--------------------"
+          echo if (getBuildUser()==null) {
+            echo "AUTO"
+          }
+          
 
           echo "---------OK(Сухих)---------"
-          echo (null==currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName())
-          echo "--------------------"
+          if (null==currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()) {
+            echo "AUTO"
+          }
+          
         }
       }
     }
