@@ -13,7 +13,7 @@ pipeline {
     VER1C = '8.3.18.1483'
     enCode = '0008'
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
-
+    executionCancelled = false
   }
   stages {
     stage('0. Разрешение запуска'){
@@ -24,9 +24,10 @@ pipeline {
             def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
             if (isBatDeny != "on") {
               echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
+              executionCancelled = true
               currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
               //return
-              }
+            }
           } 
         }
       }
@@ -34,10 +35,9 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          // echo "Проверка необходимости запуска "
-          // if (runAllowed.toLowerCase() == 'false') {
-          //   error "Запуск запрещен настройками"            
-          // }
+          if (executionCancelled) {
+            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+          }
 	        echo "Проверка наличия oscript.exe в PATH"
           try {
             bat "chcp 65001\nOSCRIPT.exe>nul"
@@ -70,6 +70,9 @@ pipeline {
       steps {
         timeout(time: 1, unit: 'MINUTES') {
           script {
+            if (executionCancelled) {
+              currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+            }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
 
               RC = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} /delete """
@@ -87,6 +90,9 @@ pipeline {
     stage ('3. Формирование скрипта загрузки') {
       steps {
         script {
+          if (executionCancelled) {
+            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+          }
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
            echo "command: " + command
 
@@ -101,6 +107,10 @@ pipeline {
     stage ('4. Загрузка ИБ из бэкапа') {
       steps {
         script {
+          if (executionCancelled) {
+            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+          }
+
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
             def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o COMMAND.4.out"
             echo "command: " + command
@@ -114,6 +124,9 @@ pipeline {
     stage ('5. Установка константы заголовок ИБ') {
       steps {
         script {
+          if (executionCancelled) {
+            currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
+          }
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
                 --command \"${IbTitle}\"
