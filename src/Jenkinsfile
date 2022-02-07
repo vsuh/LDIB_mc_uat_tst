@@ -24,16 +24,16 @@ pipeline {
       steps{
         script {
 
-          echo "--------------------"
-          echo currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]['userId']
+          echo "---------OK(vsuh)-----------"
+          echo (currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')==null)
           echo "--------------------"
          
           echo "-------OK(vsuh)-------------"
-          echo getBuildUser()
+          echo (getBuildUser()==null)
           echo "--------------------"
 
           echo "---------OK(Сухих)---------"
-          echo currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()
+          echo (null==currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName())
           echo "--------------------"
         }
       }
