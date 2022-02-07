@@ -21,13 +21,13 @@ pipeline {
       steps{
         script {
 
-          def deny = bat(script: "curl --silent -X GET http://mysql:8000/q/mc_zup_tst", returnStdout: true)
-          
-          echo "---------OK(Сухих):${deny}---------"
+          echo "---------OK(Сухих)---------" 
           def User = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null==User) {
+            def deny = bat(script: "@curl --silent -X GET http://mysql:8000/q/mc_zup_tst", returnStdout: true)
+            echo "Empty user. Denied bat: (${deny})"
             if (deny!="on") {
-            echo "Сборка отменена (${deny})"
+              echo "Сборка отменена (${deny})"
               currentBuild.result = 'SUCCESS'
               return
               }
