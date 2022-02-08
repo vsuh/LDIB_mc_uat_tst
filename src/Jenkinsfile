@@ -169,7 +169,7 @@ pipeline {
                   withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
                     bat "echo "+ command + " > log\\COMMAND.4.txt"
-                    bat "chcp 65001>nul\n${ command }"
+                    RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
                   }
               } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 // stepErrors.stage4 = "4: ${e.toString()}"
@@ -186,6 +186,7 @@ pipeline {
                 error caughtException.message
             }
           }
+          echo "##### Результат работы скрипта: ${RC}"
           // stepErrors.stage5 = "4: OK"
         }
       }
