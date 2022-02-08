@@ -16,8 +16,8 @@ pipeline {
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
     executionCancelled = false
     notifyToken = '2djDy2SkydHJ-pE1b1cp5QaBy73yGPXx'
-    msg_ERR = ''
-    NOTE = ''
+    msg_ERR = "~"
+    NOTE = "~"
   }
   stages {
     stage('0. Разрешение запуска'){
@@ -168,7 +168,7 @@ pipeline {
         ${BUILD_URL}console\n""" + log
 
         echo msg
-        
+
         notifyEvents message: msg,
           token: notifyToken, 
           title: "<b>${ib}</b> Неудача", 
