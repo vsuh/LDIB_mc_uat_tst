@@ -31,9 +31,10 @@ pipeline {
               echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
               executionCancelled = true
               currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
-              stepErrors.stage0 = "Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
+              stepErrors.stage0 = "0: Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
             }
           } 
+              stepErrors.stage0 = "0: Успешно (${isBatDeny}) и ${runningUser}"
         }
       }
     }
@@ -42,6 +43,7 @@ pipeline {
         script {
           if (executionCancelled == true) {
             echo "step 1 skipped by setting cancel"
+            stepErrors.stage1 = "1: Отменен"
             return
           }
 	        echo "Проверка наличия oscript.exe в PATH"
@@ -49,7 +51,8 @@ pipeline {
             bat "OSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
-            msg_ERR = msg_ERR + "\n0. Не удалось найти OSCRIPT.exe - ABORT"
+            msg_ERR = msg_ERR + "\n1. Не удалось найти OSCRIPT.exe - ABORT"
+            stepErrors.stage1 = "1: Не удалось найти OSCRIPT.exe - ABORT"
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
           }
           bat "chcp 65001>nul\nif not exist log md log"
@@ -61,7 +64,6 @@ pipeline {
                 --db ${ib} --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
                 """.replaceAll( /\n\s*/, " " )
-
             bat "echo "+ command + " > log\\COMMAND.1.txt"
             
             timeout (time: 90, units: "SECONDS") {
@@ -71,16 +73,20 @@ pipeline {
                   bat "chcp 65001>nul\n${ command }"
                   } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                     msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
+                    stepErrors.stage1 = "1: ${e.toString()}"
                     error "Caught ${e.toString()}"
                   } catch (Throwable e) {
+                    stepErrors.stage1 = "1: ${e.toString()}"
                     caughtException = e
                   }
                 }
                 if (caughtException) {
-                  msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${caughtException.message}"
+                  stepErrors.stage1 = "1: ${caughtException.message}"
                   error caughtException.message
               }
             }
+            stepErrors.stage5 = "1: OK"
           }
         }
       }
@@ -90,19 +96,23 @@ pipeline {
         timeout(time: 1, unit: 'MINUTES') {
           script {
           if (executionCancelled == true) {
+              stepErrors.stage2 = "2: Отменен"
               echo "step 2 skipped by setting cancel"
               return
             }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
-
               RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} /delete """
               RETURN_STATUS = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} """
-              
               if ( RETURN_STATUS > 0 ) {
-                  echo "unsuccessful mapping, try with password. Previous retuned: " + RETURN_STATUS
-                  RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} ${passwd} /user:${user} """
+                echo "unsuccessful mapping, try with password. Previous retuned: " + RETURN_STATUS
+                RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} ${passwd} /user:${user} """
+                if (RC != 0) {
+                  stepErrors.stage2 = "2: Не удалось подключить сетевой диск. RC=${RC}"
+                  error
+                }
               }
             }
+            stepErrors.stage5 = "2: OK"
           }
         }
       }
@@ -111,11 +121,11 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
+            stepErrors.stage3 = "3: Отменен"
             echo "step 3 skipped by setting cancel"
             return
           }
-           def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
-
+          def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
           bat "echo "+ command + " > log\\COMMAND.3.txt"
           
           timeout(10) {
@@ -125,16 +135,20 @@ pipeline {
                 bat "chcp 65001>nul\n${ command }"
               } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
+                stepErrors.stage3 = "3: ${e.toString()}"
                 error "Caught ${e.toString()}"
               } catch (Throwable e) {
+                stepErrors.stage3 = "3: ${e.toString()}"
                 caughtException = e
               }
             }
             if (caughtException) {
-                msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
+                msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${caughtException.message}"
+                stepErrors.stage3 = "3: ${caughtException.message}"
                 error caughtException.message
             }
           }
+          stepErrors.stage5 = "3: OK"
         }
       }
     }
@@ -142,6 +156,7 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
+            stepErrors.stage4 = "4: Отменен"
             echo "step 4 skipped by setting cancel"
             return
           }
@@ -157,17 +172,21 @@ pipeline {
                     bat "chcp 65001>nul\n${ command }"
                   }
               } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                stepErrors.stage4 = "4: ${e.toString()}"
                 msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
                 error "Caught ${e.toString()}"
               } catch (Throwable e) {
+                stepErrors.stage4 = "4: ${e.toString()}"
                 caughtException = e
               }
             }
             if (caughtException) {
-                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
+                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${caughtException.message}"
+                stepErrors.stage4 = "4: ${caughtException.message}"
                 error caughtException.message
             }
           }
+          stepErrors.stage5 = "4: OK"
         }
       }
     }
@@ -175,6 +194,7 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
+            stepErrors.stage5 = "5: Отменен"
             echo "step 5 skipped by setting cancel"
             return
           }
@@ -195,19 +215,24 @@ pipeline {
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
                   bat "chcp 65001>nul\n${ command }"
+                  stepErrors.stage5 = "5: OK"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                  stepErrors.stage5 = "5: ${e.toString()}"
                   msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
                   error "Caught ${e.toString()}"
                 } catch (Throwable e) {
+                  stepErrors.stage5 = "5: ${e.toString()}"
                   caughtException = e
                 }
               }
               if (caughtException) {
-                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${caughtException.message}"
+                  stepErrors.stage5 = "5: ${caughtException.message}"
                   error caughtException.message
               }
-
             }
+            stepErrors.stage5 = "5: OK"
+
           }
         }
       }
@@ -234,6 +259,9 @@ pipeline {
       }
     }
   cleanup { script {
+      for (case in stepErrors) {
+        echo "############ ${case.key}. ${case.value}"
+      }
       if (executionCancelled == true) {
         echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
       }else{
