@@ -259,9 +259,9 @@ pipeline {
       }
     }
   cleanup { script {
-      for (el in stepErrors) {
-        echo "############ ${el.key}. ${el.value}"
-      }
+      // for (el in stepErrors) {
+      //   echo "############ ${el.key}. ${el.value}"
+      // }
       if (executionCancelled == true) {
         echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
       }else{
