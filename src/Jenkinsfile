@@ -1,23 +1,25 @@
+String msg_ERR = "~"
+String NOTE = "~"
 
 pipeline {
   agent{ label 'mini'}
   options { timestamps () }
   environment {
+    notifyToken = '2djDy2SkydHJ-pE1b1cp5QaBy73yGPXx'
+    // msg_ERR = "~"
+    // NOTE = "~"
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
     tb = "${ib[0..5]}"
     IbTitle = LIB.strIbTitle(ib)
     cs = 'lib/create-script.os'
-    CLADDR = 'obr-app-13'
-    SQLSRV = 'obr-sql-01'
+    CLADDR = 'lob-1c-test'
+    SQLSRV = 'lob-1c-test'
     SQLbackup = '\\\\192.168.3.56\\backup'
     VER1C = '8.3.18.1483'
     enCode = '0008'
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
     executionCancelled = false
-    notifyToken = '2djDy2SkydHJ-pE1b1cp5QaBy73yGPXx'
-    msg_ERR = "~"
-    NOTE = "~"
   }
   stages {
     stage('0. Разрешение запуска'){
@@ -103,10 +105,13 @@ pipeline {
            echo "command: " + command
 
           bat "echo "+ command + " > log\\COMMAND.3.txt"
+          msg_ERR = msg_ERR + "\nФормирование скрипта - TIMEOUT"
           timeout(10) {
             bat """chcp 65001
                 ${ command } """
           }
+          msg_ERR = msg_ERR + "\nФормирование скрипта - TIMEOUT"
+
         }
       }
     }
@@ -118,6 +123,7 @@ pipeline {
             return
           }
           def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 720][tb]
+          msg_ERR = msg_ERR + "\nЗагрузка ИБ - TIMEOUT"
           timeout (time: timeoutValue, units: "SECONDS") {
             withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
               def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
@@ -127,6 +133,8 @@ pipeline {
               ${ command } """
             }
           }
+          msg_ERR = msg_ERR + "\nЗагрузка ИБ - OK"
+
         }
       }
     }
@@ -147,10 +155,12 @@ pipeline {
                 """.replaceAll( /\n\s*/, " " )
             echo "command: " + command
             bat "echo "+ command + " > log\\COMMAND.5.txt"
+            msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
             timeout(10) {
                 bat """chcp 65001
                 ${ command } """
             }
+            msg_ERR = msg_ERR + "\nУстановка заголовка - OK"
             currentBuild.result = 'FAIL'
           }
         }
