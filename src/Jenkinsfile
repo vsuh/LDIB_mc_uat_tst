@@ -24,6 +24,7 @@ pipeline {
       steps{
         script {
           currentBuild.result = 'ABORTED'
+          return
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
             def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
