@@ -1,12 +1,12 @@
 
 pipeline {
-  agent{ label 'mini'}
-  options { timestamps () }
+  agent{ label 'mini' }
   environment {
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
     tb = "${ib[0..5]}"
     IbTitle = LIB.strIbTitle(ib)
+    // runAllowed = LIB.getValueRedis(ib)
     cs = 'lib/create-script.os'
     CLADDR = 'obr-app-13'
     SQLSRV = 'obr-sql-01'
@@ -14,35 +14,28 @@ pipeline {
     VER1C = '8.3.18.1483'
     enCode = '0008'
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
-    executionCancelled = false
+
   }
   stages {
     stage('0. Разрешение запуска'){
       steps{
         script {
-          def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
-          if (null == runningUser) { // scheduled job launch
-            def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
-            if (isBatDeny != "on") {
-              echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
-              executionCancelled = true
-              currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
-//              stepErrors.stage0 = "Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
-            }
-          } 
+          echo "--------------------"
+          echo currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserName()
+          echo "--------------------"
         }
       }
     }
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
-          if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
-            return
-          }
+          // echo "Проверка необходимости запуска "
+          // if (runAllowed.toLowerCase() == 'false') {
+          //   error "Запуск запрещен настройками"            
+          // }
 	        echo "Проверка наличия oscript.exe в PATH"
           try {
-            bat "OSCRIPT.exe>nul"
+            bat "chcp 65001\nOSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
@@ -57,7 +50,8 @@ pipeline {
                 --uccode ${enCode} --v8version ${VER1C}
                 """.replaceAll( /\n\s*/, " " )
 
-          bat "echo "+ command + " > log\\COMMAND.1.txt"
+
+          bat "echo "+ command + " > COMMAND.1.txt"
           echo "command: " + command
           timeout (10) {
             bat """chcp 65001
@@ -71,10 +65,6 @@ pipeline {
       steps {
         timeout(time: 1, unit: 'MINUTES') {
           script {
-          if (executionCancelled == true) {
-              echo "step skipped by setting cancel"
-              return
-            }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
 
               RC = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} /delete """
@@ -92,14 +82,10 @@ pipeline {
     stage ('3. Формирование скрипта загрузки') {
       steps {
         script {
-          if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
-            return
-          }
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
            echo "command: " + command
 
-          bat "echo "+ command + " > log\\COMMAND.3.txt"
+          bat "echo "+ command + " > COMMAND.3.txt"
           timeout(10) {
             bat """chcp 65001
                 ${ command } """
@@ -110,28 +96,19 @@ pipeline {
     stage ('4. Загрузка ИБ из бэкапа') {
       steps {
         script {
-          if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
-            return
-          }
-
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
+            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o COMMAND.4.out"
             echo "command: " + command
-            bat "echo "+ command + " > log\\COMMAND.4.txt"
+            bat "echo "+ command + " > COMMAND.4.txt"
             bat """chcp 65001
             ${ command } """
           }
         }
       }
     }
-    stage ('5. Установка константы заголовок ИБ') {
+        stage ('5. Установка константы заголовок ИБ') {
       steps {
         script {
-          if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
-            return
-          }
           withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
                 --command \"${IbTitle}\"
@@ -141,7 +118,7 @@ pipeline {
                 --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
                 """.replaceAll( /\n\s*/, " " )
             echo "command: " + command
-            bat "echo "+ command + " > log\\COMMAND.5.txt"
+            bat "echo "+ command + " > COMMAND.5.txt"
             timeout(10) {
                 bat """chcp 65001
                 ${ command } """
@@ -150,9 +127,11 @@ pipeline {
         }
       }
     }
+
   }
-    post {
+  post {
     always { script {
+      // if (runAllowed.toLowerCase() != 'false') {
         withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
             , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner session unlock
@@ -169,11 +148,12 @@ pipeline {
 
             echo "command: " + command
 
-            bat "echo "+ command + " > log\\COMMAND.P.txt"
+            bat "echo "+ command + " > COMMAND.P.txt"
 
             bat """chcp 65001>nul
                 $command"""
-      }      
+        }
+      // }
     }}
   }
 }
