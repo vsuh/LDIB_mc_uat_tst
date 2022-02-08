@@ -62,7 +62,7 @@ pipeline {
 
           bat "echo "+ command + " > log\\COMMAND.1.txt"
           echo "command: " + command
-          timeout (10) {
+          timeout (time: 90, units: "SECONDS") {
             bat """chcp 65001
               ${ command } """
           }
@@ -117,13 +117,15 @@ pipeline {
             echo "step 4 skipped by setting cancel"
             return
           }
-
-          withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
-            echo "command: " + command
-            bat "echo "+ command + " > log\\COMMAND.4.txt"
-            bat """chcp 65001
-            ${ command } """
+          def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 720][tb]
+          timeout (time: timeoutValue, units: "SECONDS") {
+            withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
+              def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
+              echo "command: " + command
+              bat "echo "+ command + " > log\\COMMAND.4.txt"
+              bat """chcp 65001
+              ${ command } """
+            }
           }
         }
       }
@@ -160,13 +162,16 @@ pipeline {
       script {
         int msg_len_limit = 1024
         String log = msg_ERR.length() <= msg_len_limit ? msg_ERR : '...'+msg_ERR.substring(msg_ERR.length() - msg_len_limit)
-        notifyEvents message: """<b>${BUILD_DISPLAY_NAME}</b> Загрузка <b>${JOB_BASE_NAME}</b> 
+        String msg = """<b>${BUILD_DISPLAY_NAME}</b> Загрузка <b>${JOB_BASE_NAME}</b> 
         завершена с ошибками
         <i>${NOTE}</i> (${currentBuild.durationString}) [${currentBuild.result}]
-        ${BUILD_URL}console\n""" + log,
+        ${BUILD_URL}console\n""" + log
+
+        echo msg
+        
+        notifyEvents message: msg,
           token: notifyToken, 
           title: "<b>${ib}</b> Неудача", 
-          attachBuildLog: true, 
           level: "error"
       }
     }
