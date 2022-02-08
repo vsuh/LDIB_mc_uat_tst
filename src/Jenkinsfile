@@ -1,13 +1,11 @@
 String msg_ERR = ""
-String NOTE = "~"
+String NOTE = ""
 
 pipeline {
   agent{ label 'mini'}
   options { timestamps () }
   environment {
-    notifyToken = '2djDy2SkydHJ-pE1b1cp5QaBy73yGPXx'
-    // msg_ERR = "~"
-    // NOTE = "~"
+//    notifyToken = '2djDy2SkydHJ-pE1b1cp5QaBy73yGPXx'
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
     tb = "${ib[0..5]}"
@@ -25,6 +23,7 @@ pipeline {
     stage('0. Разрешение запуска'){
       steps{
         script {
+          currentBuild.result = 'ABORTED'
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
             def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
@@ -64,13 +63,12 @@ pipeline {
                 """.replaceAll( /\n\s*/, " " )
 
             bat "echo "+ command + " > log\\COMMAND.1.txt"
-            echo "command: " + command
-            msg_ERR = msg_ERR + "\nБлокирование ИБ - TIMEOUT"
+            
             timeout (time: 90, units: "SECONDS") {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
-                  bat "chcp 65001\n${ command }"
+                  bat "chcp 65001>nul\n${ command }"
                   } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                     msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
                     error "Caught ${e.toString()}"
@@ -97,12 +95,12 @@ pipeline {
             }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
 
-              RC = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} /delete """
-              RETURN_STATUS = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} """
+              RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} /delete """
+              RETURN_STATUS = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} """
               
               if ( RETURN_STATUS > 0 ) {
                   echo "unsuccessful mapping, try with password. Previous retuned: " + RETURN_STATUS
-                  RC = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} ${passwd} /user:${user} """
+                  RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} ${passwd} /user:${user} """
               }
             }
           }
@@ -117,7 +115,6 @@ pipeline {
             return
           }
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
-           echo "command: " + command
 
           bat "echo "+ command + " > log\\COMMAND.3.txt"
           msg_ERR = msg_ERR + "\nФормирование скрипта - TIMEOUT"
@@ -125,7 +122,7 @@ pipeline {
             Exception caughtException = null
             catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
               try {
-                bat "chcp 65001\n${ command }"
+                bat "chcp 65001>nul\n${ command }"
               } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
                 error "Caught ${e.toString()}"
@@ -156,9 +153,8 @@ pipeline {
                 try {
                   withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
-                    echo "command: " + command
                     bat "echo "+ command + " > log\\COMMAND.4.txt"
-                    bat "chcp 65001\n${ command }"
+                    bat "chcp 65001>nul\n${ command }"
                   }
               } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
@@ -191,14 +187,14 @@ pipeline {
                 --uccode ${enCode} --v8version ${VER1C}
                 --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
                 """.replaceAll( /\n\s*/, " " )
-            echo "command: " + command
+          
             bat "echo "+ command + " > log\\COMMAND.5.txt"
             // msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
             timeout(3) {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
-                  bat "chcp 65001\n${ command }"
+                  bat "chcp 65001>nul\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                   msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
                   error "Caught ${e.toString()}"
@@ -212,8 +208,6 @@ pipeline {
               }
 
             }
-            // msg_ERR = msg_ERR + "\nУстановка заголовка - OK"////
-            currentBuild.result = 'FAIL'
           }
         }
       }
@@ -231,10 +225,12 @@ pipeline {
 
         echo msg
 
-        notifyEvents message: msg,
-          token: notifyToken, 
-          title: "<b>${ib}</b> Неудача", 
-          level: "error"
+        withCredentials([string(credentialsId: 'tgNotifyEvents', variable: 'NE_token')]) {
+          notifyEvents message: msg,
+            token: NE_token, 
+            title: "<b>${ib}</b> Неудача", 
+            level: "error"
+        }
       }
     }
   cleanup { script {
@@ -254,13 +250,9 @@ pipeline {
           --v8version ${ VER1C }
           """.replaceAll( /\n\s*/, " " )
 
-
-          echo "command: " + command
-
           bat "echo "+ command + " > log\\COMMAND.P.txt"
 
-          bat """chcp 65001>nul
-              $command"""
+          bat """chcp 65001>nul\n$command"""
       }
     }
   }}
