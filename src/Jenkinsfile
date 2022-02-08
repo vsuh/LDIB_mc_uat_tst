@@ -162,7 +162,7 @@ pipeline {
           }
           def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 720][tb]
 
-          timeout (time: timeoutValue, units: "SECONDS") {
+          timeout (time: timeoutValue, unit: "SECONDS") {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
