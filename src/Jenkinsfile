@@ -18,7 +18,7 @@ pipeline {
     SQLbackup = '\\\\192.168.3.56\\backup'
     VER1C = '8.3.18.1483'
     enCode = '0008'
-    scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
+    scPath = "${env.WORKSPACE}/log/SQL_${ib}.SQLscript"
     executionCancelled = false
   }
   stages {
@@ -67,10 +67,22 @@ pipeline {
             echo "command: " + command
             msg_ERR = msg_ERR + "\nБлокирование ИБ - TIMEOUT"
             timeout (time: 90, units: "SECONDS") {
-              bat """chcp 65001
-                ${ command } """
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  bat "chcp 65001\n${ command }"
+                  } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                    msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
+                    error "Caught ${e.toString()}"
+                  } catch (Throwable e) {
+                    caughtException = e
+                  }
+                }
+                if (caughtException) {
+                  msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
+                  error caughtException.message
+              }
             }
-            msg_ERR = msg_ERR + "\nБлокирование ИБ - OK"
           }
         }
       }
@@ -110,11 +122,22 @@ pipeline {
           bat "echo "+ command + " > log\\COMMAND.3.txt"
           msg_ERR = msg_ERR + "\nФормирование скрипта - TIMEOUT"
           timeout(10) {
-            bat """chcp 65001
-                ${ command } """
+            Exception caughtException = null
+            catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+              try {
+                bat "chcp 65001\n${ command }"
+              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
+                error "Caught ${e.toString()}"
+              } catch (Throwable e) {
+                caughtException = e
+              }
+            }
+            if (caughtException) {
+                msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
+                error caughtException.message
+            }
           }
-          msg_ERR = msg_ERR + "\nФормирование скрипта - TIMEOUT"
-
         }
       }
     }
@@ -128,16 +151,27 @@ pipeline {
           def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 720][tb]
           msg_ERR = msg_ERR + "\nЗагрузка ИБ - TIMEOUT"
           timeout (time: timeoutValue, units: "SECONDS") {
-            withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-              def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
-              echo "command: " + command
-              bat "echo "+ command + " > log\\COMMAND.4.txt"
-              bat """chcp 65001
-              ${ command } """
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
+                    def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
+                    echo "command: " + command
+                    bat "echo "+ command + " > log\\COMMAND.4.txt"
+                    bat "chcp 65001\n${ command }"
+                  }
+              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
+                error "Caught ${e.toString()}"
+              } catch (Throwable e) {
+                caughtException = e
+              }
+            }
+            if (caughtException) {
+                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
+                error caughtException.message
             }
           }
-          msg_ERR = msg_ERR + "\nЗагрузка ИБ - OK"
-
         }
       }
     }
@@ -164,7 +198,7 @@ pipeline {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
-                bat "chcp 65001\n${ command }"
+                  bat "chcp 65001\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                   msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
                   error "Caught ${e.toString()}"
@@ -204,7 +238,7 @@ pipeline {
       }
     }
   cleanup { script {
-      if (executionCancelled != true) {
+      if (executionCancelled == true) {
         echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
       }else{
       withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
