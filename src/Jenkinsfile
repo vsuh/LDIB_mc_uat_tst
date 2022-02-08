@@ -50,6 +50,7 @@ pipeline {
             bat "OSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
+            msg_ERR = msg_ERR + "\nНе удалось найти OSCRIPT.exe - ABORT"
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
           }
           bat "chcp 65001>nul\nif not exist log md log"
@@ -62,12 +63,14 @@ pipeline {
                 --uccode ${enCode} --v8version ${VER1C}
                 """.replaceAll( /\n\s*/, " " )
 
-          bat "echo "+ command + " > log\\COMMAND.1.txt"
-          echo "command: " + command
-          timeout (time: 90, units: "SECONDS") {
-            bat """chcp 65001
-              ${ command } """
-          }
+            bat "echo "+ command + " > log\\COMMAND.1.txt"
+            echo "command: " + command
+            msg_ERR = msg_ERR + "\nБлокирование ИБ - TIMEOUT"
+            timeout (time: 90, units: "SECONDS") {
+              bat """chcp 65001
+                ${ command } """
+            }
+            msg_ERR = msg_ERR + "\nБлокирование ИБ - OK"
           }
         }
       }
