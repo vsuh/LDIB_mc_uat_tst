@@ -156,7 +156,7 @@ pipeline {
             echo "command: " + command
             bat "echo "+ command + " > log\\COMMAND.5.txt"
             msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
-            timeout(10) {
+            timeout(3) {
                 bat """chcp 65001
                 ${ command } """
             }
