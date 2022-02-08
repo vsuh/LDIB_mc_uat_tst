@@ -59,7 +59,10 @@ pipeline {
 
           bat "echo "+ command + " > log\\COMMAND.1.txt"
           echo "command: " + command
-          timeout (10) {
+          // def TIMES = [mc_bnu: 7200, mc_zup: 3600, mc_uat: 600, mc_zup_111: 3600]
+          def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 600][tb]
+
+          timeout (time: timeoutValue, units: "SECONDS") {
             bat """chcp 65001
               ${ command } """
           }
