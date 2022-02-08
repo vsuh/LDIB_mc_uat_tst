@@ -1,6 +1,7 @@
 
 pipeline {
   agent{ label 'mini'}
+  options { timestamps () }
   environment {
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
@@ -56,7 +57,7 @@ pipeline {
                 --uccode ${enCode} --v8version ${VER1C}
                 """.replaceAll( /\n\s*/, " " )
 
-          bat "echo "+ command + " > COMMAND.1.txt"
+          bat "echo "+ command + " > log\\COMMAND.1.txt"
           echo "command: " + command
           timeout (10) {
             bat """chcp 65001
@@ -98,7 +99,7 @@ pipeline {
            def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
            echo "command: " + command
 
-          bat "echo "+ command + " > COMMAND.3.txt"
+          bat "echo "+ command + " > log\\COMMAND.3.txt"
           timeout(10) {
             bat """chcp 65001
                 ${ command } """
@@ -115,9 +116,9 @@ pipeline {
           }
 
           withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o COMMAND.4.out"
+            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
             echo "command: " + command
-            bat "echo "+ command + " > COMMAND.4.txt"
+            bat "echo "+ command + " > log\\COMMAND.4.txt"
             bat """chcp 65001
             ${ command } """
           }
@@ -140,7 +141,7 @@ pipeline {
                 --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
                 """.replaceAll( /\n\s*/, " " )
             echo "command: " + command
-            bat "echo "+ command + " > COMMAND.5.txt"
+            bat "echo "+ command + " > log\\COMMAND.5.txt"
             timeout(10) {
                 bat """chcp 65001
                 ${ command } """
@@ -168,13 +169,11 @@ pipeline {
 
             echo "command: " + command
 
-            bat "echo "+ command + " > COMMAND.P.txt"
+            bat "echo "+ command + " > log\\COMMAND.P.txt"
 
             bat """chcp 65001>nul
                 $command"""
-        }
-      // }
+      }      
     }}
   }
-
 }
