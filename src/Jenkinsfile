@@ -259,8 +259,8 @@ pipeline {
       }
     }
   cleanup { script {
-      for (case in stepErrors) {
-        echo "############ ${case.key}. ${case.value}"
+      for (el in stepErrors) {
+        echo "############ ${el.key}. ${el.value}"
       }
       if (executionCancelled == true) {
         echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
