@@ -1,4 +1,4 @@
-String msg_ERR = "~"
+String msg_ERR = ""
 String NOTE = "~"
 
 pipeline {
@@ -50,7 +50,7 @@ pipeline {
             bat "OSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
-            msg_ERR = msg_ERR + "\nНе удалось найти OSCRIPT.exe - ABORT"
+            msg_ERR = msg_ERR + "\n0. Не удалось найти OSCRIPT.exe - ABORT"
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
           }
           bat "chcp 65001>nul\nif not exist log md log"
@@ -158,12 +158,26 @@ pipeline {
                 """.replaceAll( /\n\s*/, " " )
             echo "command: " + command
             bat "echo "+ command + " > log\\COMMAND.5.txt"
-            msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
+            // msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
             timeout(3) {
-                bat """chcp 65001
-                ${ command } """
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                bat "chcp 65001\n${ command }"
+                } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
+                  error "Caught ${e.toString()}"
+                } catch (Throwable e) {
+                  caughtException = e
+                }
+              }
+              if (caughtException) {
+                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
+                  error caughtException.message
+              }
+
             }
-            msg_ERR = msg_ERR + "\nУстановка заголовка - OK"
+            // msg_ERR = msg_ERR + "\nУстановка заголовка - OK"////
             currentBuild.result = 'FAIL'
           }
         }
