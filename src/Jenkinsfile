@@ -34,7 +34,7 @@ pipeline {
               stepErrors.stage0 = "0: Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
             }
           } 
-              stepErrors.stage0 = "0: Успешно (${isBatDeny}) и ${runningUser}"
+            stepErrors.stage0 = "0: Успешно ${runningUser}"
         }
       }
     }
