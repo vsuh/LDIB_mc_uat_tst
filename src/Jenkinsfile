@@ -13,12 +13,14 @@ pipeline {
     VER1C = '8.3.18.1483'
     enCode = '0008'
     scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
+    stepErrors = [:]
     executionCancelled = false
   }
   stages {
     stage('0. Разрешение запуска'){
       steps{
         script {
+          stepErrors.stage0 = "OK"
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
             def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
@@ -26,7 +28,7 @@ pipeline {
               echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
               executionCancelled = true
               currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
-              //return
+              stepErrors.stage0 = "Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
             }
           } 
         }
@@ -35,13 +37,14 @@ pipeline {
     stage('1. Подготовка (Блокирование ИБ, отключение сеансов)') {
       steps {
         script {
+          stepErrors.stage1 = "OK"
           if (executionCancelled == true) {
             echo "step skipped by setting cancel"
             return
           }
 	        echo "Проверка наличия oscript.exe в PATH"
           try {
-            bat "chcp 65001\nOSCRIPT.exe>nul"
+            bat "OSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
@@ -55,7 +58,6 @@ pipeline {
                 --db ${ib} --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
                 """.replaceAll( /\n\s*/, " " )
-
 
           bat "echo "+ command + " > COMMAND.1.txt"
           echo "command: " + command
@@ -151,4 +153,34 @@ pipeline {
       }
     }
   }
+    post {
+    always { script {
+        if (stepErrors.size() > 0) {
+          echo "step errors: ``${stepErrors.stage0}``"
+        }
+        withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+            , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = """vrunner session unlock
+            --ras ${CLADDR}
+            --cluster-admin ${ clADMIN }
+            --cluster-pwd ${ clPASSWD }
+            --ibconnection /s${CLADDR}\\${ ib }
+            --db ${ ib } --db-user ${ ibADMIN }
+            --db-pwd ${ ibPASSWORD }
+            --uccode ${ enCode }
+            --v8version ${ VER1C }
+            """.replaceAll( /\n\s*/, " " )
+
+
+            echo "command: " + command
+
+            bat "echo "+ command + " > COMMAND.P.txt"
+
+            bat """chcp 65001>nul
+                $command"""
+        }
+      // }
+    }}
+  }
+
 }
