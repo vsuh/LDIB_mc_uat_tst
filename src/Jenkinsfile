@@ -152,6 +152,7 @@ pipeline {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
                 --command \"${IbTitle}\"
                 --ibconnection /s${CLADDR}\\${ib}
+                --ordinaryapp 1
                 --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
                 --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
