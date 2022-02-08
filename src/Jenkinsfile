@@ -205,7 +205,7 @@ pipeline {
     }
   cleanup { script {
       if (executionCancelled != true) {
-        echo "step `post` skipped by setting cancel"
+        echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
       }else{
       withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
           , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
