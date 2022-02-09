@@ -160,7 +160,7 @@ pipeline {
             echo "step 4 skipped by setting cancel"
             return
           }
-          def timeoutValue = ["mc_bnu": 240, "mc_zup": 180, "mc_uat": 80][tb]
+          def timeoutValue = ["mc_bnu": 350, "mc_zup": 280, "mc_uat": 90][tb]
           timeout (time: timeoutValue, unit: "MINUTES") {
 //              Exception caughtException = null
 //              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
