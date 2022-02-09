@@ -186,7 +186,7 @@ pipeline {
 //            }
           }
           echo "##### Результат работы скрипта: ${RC}"
-          if ( RC <> 0 ) {
+          if ( RC != 0 ) {
             currentBuild.result = 'ERROR'
           }
           // stepErrors.stage5 = "4: OK"
