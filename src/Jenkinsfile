@@ -169,7 +169,7 @@ pipeline {
                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
                     bat "echo "+ command + " > log\\COMMAND.4.txt"
                     RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
-//                  }
+                  }
 //              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
 //                // stepErrors.stage4 = "4: ${e.toString()}"
 //               msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
