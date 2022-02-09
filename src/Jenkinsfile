@@ -160,33 +160,35 @@ pipeline {
             echo "step 4 skipped by setting cancel"
             return
           }
-          def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 720][tb]
-
-          timeout (time: timeoutValue, unit: "SECONDS") {
-              Exception caughtException = null
-              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
-                try {
+          def timeoutValue = ["mc_bnu": 240, "mc_zup": 180, "mc_uat": 80][tb]
+          timeout (time: timeoutValue, unit: "MINUTES") {
+//              Exception caughtException = null
+//              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+//                try {
                   withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
                     bat "echo "+ command + " > log\\COMMAND.4.txt"
                     RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
-                  }
-              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                // stepErrors.stage4 = "4: ${e.toString()}"
-                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
-                error "Caught ${e.toString()}"
-              } catch (Throwable e) {
-                // stepErrors.stage4 = "4: ${e.toString()}"
-                caughtException = e
-              }
-            }
-            if (caughtException) {
-                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${caughtException.message}"
-                // stepErrors.stage4 = "4: ${caughtException.message}"
-                error caughtException.message
-            }
+//                  }
+//              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+//                // stepErrors.stage4 = "4: ${e.toString()}"
+//               msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
+//                error "Caught ${e.toString()}"
+//              } catch (Throwable e) {
+//                // stepErrors.stage4 = "4: ${e.toString()}"
+//                caughtException = e
+//              }
+//            }
+//            if (caughtException) {
+//                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${caughtException.message}"
+//                // stepErrors.stage4 = "4: ${caughtException.message}"
+//                error caughtException.message
+//            }
           }
           echo "##### Результат работы скрипта: ${RC}"
+          if ( RC <> 0 ) {
+            currentBuild.result = 'ERROR'
+          }
           // stepErrors.stage5 = "4: OK"
         }
       }
