@@ -19,6 +19,7 @@ pipeline {
     enCode = '0008'
     scPath = "${env.WORKSPACE}/log/SQL_${ib}.SQLscript"
     executionCancelled = false
+    autoRun = false
   }
   stages {
     stage('0. Разрешение запуска'){
@@ -26,6 +27,7 @@ pipeline {
         script {
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
+            autoRun = true
             def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
             if (isBatDeny != "on") {
               echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
@@ -258,6 +260,23 @@ pipeline {
             token: NE_token, 
             title: "<b>${ib}</b> Неудача", 
             level: "error"
+        }
+      }
+    }
+    success{
+      script {
+        if(autoRun == false){
+          String msg = """<b>${BUILD_DISPLAY_NAME}</b> Загрузка <b>${JOB_BASE_NAME}</b> 
+          завершена успешно
+          <i>${NOTE}</i> (${currentBuild.durationString}) [${currentBuild.result}]
+          ${BUILD_URL}console\n""" 
+
+          withCredentials([string(credentialsId: 'tgNotifyEvents', variable: 'NE_token')]) {
+            notifyEvents message: msg,
+              token: NE_token, 
+              title: "<b>${ib}</b> Успех", 
+              level: "info"
+          }
         }
       }
     }
