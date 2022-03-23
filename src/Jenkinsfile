@@ -128,7 +128,7 @@ pipeline {
             return
           }
           def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
-          bat "echo "+ command + " > log\\COMMAND.3.txt"
+          bat "echo "+ command + ' > log\\COMMAND.3.txt'
           
           timeout(10) {
             Exception caughtException = null
@@ -169,7 +169,7 @@ pipeline {
 //                try {
                   withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
-                    bat "echo "+ command + " > log\\COMMAND.4.txt"
+                    bat "echo "+ command + '> log\\COMMAND.4.txt'
                     RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
                   }
 //              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
@@ -211,9 +211,9 @@ pipeline {
                 --nocacheuse 
                 --uccode ${enCode} --v8version ${VER1C}
                 --command "ЗапуститьОбновлениеИнформационнойБазы;ЗавершитьРаботуСистемы;" 
-                --execute $runnerRoot\epf\ЗакрытьПредприятие.epf
+                --execute $runnerRoot\\epf\\ЗакрытьПредприятие.epf
             """.replaceAll( /\n\s*/, " " )
-            bat "echo "+ command + " > log\\COMMAND.5.txt"
+            bat "echo "+ command + '> log\\COMMAND.5.txt'
             timeout (time: 90) {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
