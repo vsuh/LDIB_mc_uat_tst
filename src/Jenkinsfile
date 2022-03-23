@@ -48,7 +48,7 @@ pipeline {
             // stepErrors.stage1 = "1: Отменен"
             return
           }
-	        echo "Проверка наличия oscript.exe в PATH"
+            echo "Проверка наличия oscript.exe в PATH"
           try {
             bat "OSCRIPT.exe>nul"
           } catch (e) {
@@ -195,15 +195,57 @@ pipeline {
         }
       }
     }
-    stage ('5. Установка константы заголовок ИБ') {
+    stage ('5. Запуск обработок') {
       steps {
         script {
           if (executionCancelled == true) {
-            // stepErrors.stage5 = "5: Отменен"
             echo "step 5 skipped by setting cancel"
             return
           }
-          withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+          withCredentials([
+              usernamePassword(
+                credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = """vrunner run
+                --ibconnection /s${CLADDR}\\${ib}
+                --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
+                --nocacheuse 
+                --uccode ${enCode} --v8version ${VER1C}
+                --command "ЗапуститьОбновлениеИнформационнойБазы;ЗавершитьРаботуСистемы;" 
+                --execute $runnerRoot\epf\ЗакрытьПредприятие.epf
+            """.replaceAll( /\n\s*/, " " )
+            bat "echo "+ command + " > log\\COMMAND.5.txt"
+            timeout (time: 90) {
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  bat "chcp 65001>nul\n${ command }"
+                  } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                    msg_ERR = msg_ERR + "\n5. Запуск обработок - ${e.toString()}"
+                    error "Caught ${e.toString()}"
+                  } catch (Throwable e) {
+                    caughtException = e
+                  }
+                }
+                if (caughtException) {
+                  msg_ERR = msg_ERR + "\n5. Запуск обработок - ${caughtException.message}"
+                  error caughtException.message
+              }
+            }
+          }
+        }
+      }
+    }
+    stage ('6. Установка константы заголовок ИБ') {
+      steps {
+        script {
+          if (executionCancelled == true) {
+            // stepErrors.stage6 = "6: Отменен"
+            echo "step 6 skipped by setting cancel"
+            return
+          }
+          withCredentials
+              ([usernamePassword(
+                  credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
                 --command \"${IbTitle}\"
                 --ibconnection /s${CLADDR}\\${ib}
