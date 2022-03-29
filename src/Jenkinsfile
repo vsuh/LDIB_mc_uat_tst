@@ -243,8 +243,8 @@ pipeline {
             echo "step 6 skipped by setting cancel"
             return
           }
-          withCredentials
-              ([usernamePassword(
+          withCredentials([
+              usernamePassword(
                   credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
                 --command \"${IbTitle}\"
