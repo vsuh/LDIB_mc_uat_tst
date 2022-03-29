@@ -211,7 +211,7 @@ pipeline {
                 --nocacheuse 
                 --uccode ${enCode} --v8version ${VER1C}
                 --command "ЗапуститьОбновлениеИнформационнойБазы;ЗавершитьРаботуСистемы;" 
-                --execute $runnerRoot\\epf\\ЗакрытьПредприятие.epf
+                --execute \$runnerRoot\\epf\\ЗакрытьПредприятие.epf
             """.replaceAll( /\n\s*/, " " )
             bat "echo "+ command + '> log\\COMMAND.5.txt'
             timeout (time: 90) {
