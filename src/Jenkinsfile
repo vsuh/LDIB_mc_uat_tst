@@ -68,7 +68,7 @@ pipeline {
                 """.replaceAll( /\n\s*/, " " )
             bat "echo "+ command + " > log\\COMMAND.1.txt"
             
-            timeout (time: 90, units: "SECONDS") {
+            timeout (time: 90, unit: "SECONDS") {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
