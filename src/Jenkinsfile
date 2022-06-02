@@ -336,13 +336,13 @@ pipeline {
           , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
           def command = '''vrunner session unlock
           --ras ${CLADDR}
-          --cluster-admin ${ clADMIN }
-          --cluster-pwd ${ clPASSWD }
-          --ibconnection /s${CLADDR}\\${ ib }
-          --db ${ ib } --db-user ${ ibADMIN }
-          --db-pwd ${ ibPASSWORD }
-          --uccode ${ enCode }
-          --v8version ${ VER1C }
+          --cluster-admin ${clADMIN}
+          --cluster-pwd ${clPASSWD}
+          --ibconnection /s${CLADDR}\\${ib}
+          --db ${ib} --db-user ${ibADMIN}
+          --db-pwd ${ibPASSWORD}
+          --uccode ${enCode}
+          --v8version ${VER1C}
           '''.replaceAll( /\n\s*/, " " )
 
           bat "echo "+ command + " > log\\COMMAND.P.txt"
