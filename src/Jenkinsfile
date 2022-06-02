@@ -334,7 +334,7 @@ pipeline {
       withCredentials([usernamePassword(credentialsId: 'ClusterAdmin'
         , passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
           , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-          def command = """vrunner session unlock
+          def command = '''vrunner session unlock
           --ras ${CLADDR}
           --cluster-admin ${ clADMIN }
           --cluster-pwd ${ clPASSWD }
@@ -343,7 +343,7 @@ pipeline {
           --db-pwd ${ ibPASSWORD }
           --uccode ${ enCode }
           --v8version ${ VER1C }
-          """.replaceAll( /\n\s*/, " " )
+          '''.replaceAll( /\n\s*/, " " )
 
           bat "echo "+ command + " > log\\COMMAND.P.txt"
 
