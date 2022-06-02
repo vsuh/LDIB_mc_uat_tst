@@ -340,9 +340,9 @@ pipeline {
               --uccode ${enCode} --v8version ${VER1C}
               """.replaceAll(/\n\s*/, " ")
 
-	  echo ">>> %command%"
+	  echo ">>> ${command}"
 
-          bat "echo  ${command}  > log\\COMMAND.P.txt"
+          bat "echo ${command} > log\\COMMAND.P.txt"
 
           bat "${command}"
       }
