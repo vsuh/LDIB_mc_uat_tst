@@ -130,7 +130,7 @@ pipeline {
           def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
           bat "echo "+ command + ' > log\\COMMAND.3.txt'
           
-          timeout(10) {
+          timeout(15, unit: 'MINUTES') {
             Exception caughtException = null
             catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
               try {
@@ -214,7 +214,7 @@ pipeline {
                 --execute \$runnerRoot\\epf\\ЗакрытьПредприятие.epf
             """.replaceAll( /\n\s*/, " " )
             bat "echo "+ command + '> log\\COMMAND.5.txt'
-            timeout (time: 90) {
+            timeout (time: 9, unit: 'MINUTES') {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
@@ -257,7 +257,7 @@ pipeline {
           
             bat "echo "+ command + " > log\\COMMAND.5.txt"
             // msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
-            timeout(9) {
+            timeout(9, unit: 'MINUTES') {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
