@@ -347,7 +347,7 @@ pipeline {
           bat "${command}"
       }
     }
-        def log_cmd = "curl -s http://tb/log/${ib}"
+        def log_cmd = "curl -o log\NUL -s http://tb/log/${ib}"
         echo "Регистрация загрузки: $log_cmd"
         bat "$log_cmd"
   }}
