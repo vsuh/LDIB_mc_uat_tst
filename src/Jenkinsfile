@@ -124,6 +124,10 @@ pipeline {
             bat "echo "+ command + " > log\\COMMAND.4.txt"
             bat """chcp 65001
             ${ command } """
+
+            def log_cmd = "curl --silent http://tb/log/${ib}"
+            echo "Регистрация загрузки: $log_cmd"
+            bat "$log_cmd"
           }
         }
       }
@@ -177,9 +181,6 @@ pipeline {
             bat """chcp 65001>nul
                 $command"""
       }
-            def log_cmd = "curl http://tb/log/${ib}"
-            echo "Регистрация загрузки: $log_cmd"
-            bat "$log_cmd"
     }}
   }
 }
