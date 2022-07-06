@@ -1,20 +1,25 @@
+String msg_ERR = ""
+String NOTE = ""
+// stepErrors = [:]
 
 pipeline {
   agent{ label 'mini'}
   options { timestamps () }
   environment {
+
     LIB = load 'lib/Common.groovy'
     ib = "${JOB_BASE_NAME}"
     tb = "${ib[0..5]}"
     IbTitle = LIB.strIbTitle(ib)
     cs = 'lib/create-script.os'
-    CLADDR = 'obr-app-13'
-    SQLSRV = 'obr-sql-01'
+    CLADDR = 'lob-1c-test'
+    SQLSRV = 'lob-1c-test'
     SQLbackup = '\\\\192.168.3.56\\backup'
     VER1C = '8.3.18.1483'
     enCode = '0008'
-    scPath = "${env.WORKSPACE}/SQL_${ib}.SQLscript"
+    scPath = "${env.WORKSPACE}/log/SQL_${ib}.SQLscript"
     executionCancelled = false
+    autoRun = false
   }
   stages {
     stage('0. Разрешение запуска'){
@@ -22,14 +27,16 @@ pipeline {
         script {
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
+            autoRun = true
             def isBatDeny = bat(script: "@curl --silent -X GET http://tb/q/${JOB_BASE_NAME}", returnStdout: true)
             if (isBatDeny != "on") {
               echo "Сборка `${JOB_BASE_NAME}` отменена: в http://tb (${isBatDeny}). Успешное завершение."
               executionCancelled = true
               currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
-//              stepErrors.stage0 = "Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
+              // stepErrors.stage0 = "0: Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
             }
           } 
+            // stepErrors.stage0 = "0: Успешно ${runningUser}"
         }
       }
     }
@@ -37,14 +44,17 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
+            echo "step 1 skipped by setting cancel"
+            // stepErrors.stage1 = "1: Отменен"
             return
           }
-	        echo "Проверка наличия oscript.exe в PATH"
+            echo "Проверка наличия oscript.exe в PATH"
           try {
             bat "OSCRIPT.exe>nul"
           } catch (e) {
             currentBuild.result = 'ABORTED'
+            msg_ERR = msg_ERR + "\n1. Не удалось найти OSCRIPT.exe - ABORT"
+            // stepErrors.stage1 = "1: Не удалось найти OSCRIPT.exe - ABORT"
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
           }
           bat "chcp 65001>nul\nif not exist log md log"
@@ -56,16 +66,29 @@ pipeline {
                 --db ${ib} --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
                 --uccode ${enCode} --v8version ${VER1C}
                 """.replaceAll( /\n\s*/, " " )
-
-          bat "echo "+ command + " > log\\COMMAND.1.txt"
-          echo "command: " + command
-          // def TIMES = [mc_bnu: 7200, mc_zup: 3600, mc_uat: 600, mc_zup_111: 3600]
-          def timeoutValue = ["mc_bnu": 7200, "mc_zup": 3600, "mc_uat": 600][tb]
-
-          timeout (time: timeoutValue, units: "SECONDS") {
-            bat """chcp 65001
-              ${ command } """
-          }
+            bat "echo "+ command + " > log\\COMMAND.1.txt"
+            
+            timeout (time: 90, unit: "SECONDS") {
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  bat "chcp 65001>nul\n${command}"
+                  } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                    msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
+                    // stepErrors.stage1 = "1: ${e.toString()}"
+                    error "Caught ${e.toString()}"
+                  } catch (Throwable e) {
+                    // stepErrors.stage1 = "1: ${e.toString()}"
+                    caughtException = e
+                  }
+                }
+                if (caughtException) {
+                  msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${caughtException.message}"
+                  // stepErrors.stage1 = "1: ${caughtException.message}"
+                  error caughtException.message
+              }
+            }
+            // stepErrors.stage5 = "1: OK"
           }
         }
       }
@@ -75,19 +98,23 @@ pipeline {
         timeout(time: 1, unit: 'MINUTES') {
           script {
           if (executionCancelled == true) {
-              echo "step skipped by setting cancel"
+              // stepErrors.stage2 = "2: Отменен"
+              echo "step 2 skipped by setting cancel"
               return
             }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
-
-              RC = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} /delete """
-              RETURN_STATUS = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} """
-              
+              RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} /delete """
+              RETURN_STATUS = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} """
               if ( RETURN_STATUS > 0 ) {
-                  echo "unsuccessful mapping, try with password. Previous retuned: " + RETURN_STATUS
-                  RC = bat returnStatus: true, script: """ chcp 65001 \n net use ${SQLbackup} ${passwd} /user:${user} """
+                echo "unsuccessful mapping, try with password. Previous retuned: " + RETURN_STATUS
+                RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} ${passwd} /user:${user} """
+                if (RC != 0) {
+                  // stepErrors.stage2 = "2: Не удалось подключить сетевой диск. RC=${RC}"
+                  error
+                }
               }
             }
+            // stepErrors.stage5 = "2: OK"
           }
         }
       }
@@ -96,17 +123,34 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
+            // stepErrors.stage3 = "3: Отменен"
+            echo "step 3 skipped by setting cancel"
             return
           }
-           def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
-           echo "command: " + command
-
-          bat "echo "+ command + " > log\\COMMAND.3.txt"
-          timeout(10) {
-            bat """chcp 65001
-                ${ command } """
+          def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
+          bat "echo "+ command + ' > log\\COMMAND.3.txt'
+          
+          timeout(time: 15, unit: 'MINUTES') {
+            Exception caughtException = null
+            catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+              try {
+                bat "chcp 65001>nul\n${ command }"
+              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
+                // stepErrors.stage3 = "3: ${e.toString()}"
+                error "Caught ${e.toString()}"
+              } catch (Throwable e) {
+                // stepErrors.stage3 = "3: ${e.toString()}"
+                caughtException = e
+              }
+            }
+            if (caughtException) {
+                msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${caughtException.message}"
+                // stepErrors.stage3 = "3: ${caughtException.message}"
+                error caughtException.message
+            }
           }
+          // stepErrors.stage5 = "3: OK"
         }
       }
     }
@@ -114,73 +158,182 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
+            // stepErrors.stage4 = "4: Отменен"
+            echo "step 4 skipped by setting cancel"
             return
           }
-
-          withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-            def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
-            echo "command: " + command
-            bat "echo "+ command + " > log\\COMMAND.4.txt"
-            bat """chcp 65001
-            ${ command } """
-
+          def timeoutValue = ["mc_bnu": 350, "mc_zup": 280, "mc_uat": 90][tb]
+          timeout (time: timeoutValue, unit: "MINUTES") {
+                  withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
+                    def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
+                    bat "echo "+ command + '> log\\COMMAND.4.txt'
+                    RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
+                  }
             def log_cmd = "curl --silent http://tb/log/${ib}"
             echo "Регистрация загрузки: $log_cmd"
-            RC = bat returnStatus: true, script: "$log_cmd"
+            Rk = bat returnStatus: true, script: "$log_cmd"
+
           }
+          echo "##### Результат работы скрипта: ${RC}"
+          if ( RC != 0 ) {
+            currentBuild.result = 'ERROR'
+          }
+          
         }
       }
     }
-    stage ('5. Установка константы заголовок ИБ') {
+    stage ('5. Запуск обработок') {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step skipped by setting cancel"
+            echo "step 5 skipped by setting cancel"
             return
           }
-          withCredentials([usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
-                --command \"${IbTitle}\"
+          withCredentials([
+              usernamePassword(
+                credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = """vrunner run
                 --ibconnection /s${CLADDR}\\${ib}
                 --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
+                --nocacheuse 
                 --uccode ${enCode} --v8version ${VER1C}
-                --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
-                """.replaceAll( /\n\s*/, " " )
-            echo "command: " + command
-            bat "echo "+ command + " > log\\COMMAND.5.txt"
-            timeout(10) {
-                bat """chcp 65001
-                ${ command } """
+                --command "ЗапуститьОбновлениеИнформационнойБазы;ЗавершитьРаботуСистемы;" 
+                --execute \$runnerRoot\\epf\\ЗакрытьПредприятие.epf
+            """.replaceAll( /\n\s*/, " " )
+            bat "echo "+ command + '> log\\COMMAND.5.txt'
+            timeout (time: 9, unit: 'MINUTES') {
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  bat "chcp 65001>nul\n${ command }"
+                  } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                    msg_ERR = msg_ERR + "\n5. Запуск обработок - ${e.toString()}"
+                    error "Caught ${e.toString()}"
+                  } catch (Throwable e) {
+                    caughtException = e
+                  }
+                }
+                if (caughtException) {
+                  msg_ERR = msg_ERR + "\n5. Запуск обработок - ${caughtException.message}"
+                  error caughtException.message
+              }
             }
           }
         }
       }
     }
-  }
-    post {
-    always { script {
-        withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
-            , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            def command = """vrunner session unlock
-            --ras ${CLADDR}
-            --cluster-admin ${ clADMIN }
-            --cluster-pwd ${ clPASSWD }
-            --ibconnection /s${CLADDR}\\${ ib }
-            --db ${ ib } --db-user ${ ibADMIN }
-            --db-pwd ${ ibPASSWORD }
-            --uccode ${ enCode }
-            --v8version ${ VER1C }
-            """.replaceAll( /\n\s*/, " " )
+    stage ('6. Установка константы заголовок ИБ') {
+      steps {
+        script {
+          if (executionCancelled == true) {
+            // stepErrors.stage6 = "6: Отменен"
+            echo "step 6 skipped by setting cancel"
+            return
+          }
+          withCredentials([
+              usernamePassword(
+                  credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
+                --command \"${IbTitle}\"
+                --ibconnection /s${CLADDR}\\${ib}
+                --ordinaryapp 1
+                --db-user ${ibADMIN} --db-pwd ${ibPASSWORD}
+                --uccode ${enCode} --v8version ${VER1C}
+                --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
+                """.replaceAll( /\n\s*/, " " )
+          
+            bat "echo "+ command + " > log\\COMMAND.5.txt"
+            // msg_ERR = msg_ERR + "\nУстановка заголовка - TIMEOUT"
+            timeout(time: 9, unit: 'MINUTES') {
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  bat "chcp 65001>nul\n${ command }"
+                  // stepErrors.stage5 = "5: OK"
+                } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                  // stepErrors.stage5 = "5: ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
+                  error "Caught ${e.toString()}"
+                } catch (Throwable e) {
+                  // stepErrors.stage5 = "5: ${e.toString()}"
+                  caughtException = e
+                }
+              }
+              if (caughtException) {
+                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${caughtException.message}"
+                  // stepErrors.stage5 = "5: ${caughtException.message}"
+                  error caughtException.message
+              }
+            }
+            // stepErrors.stage5 = "5: OK"
 
-
-            echo "command: " + command
-
-            bat "echo "+ command + " > log\\COMMAND.P.txt"
-
-            bat """chcp 65001>nul
-                $command"""
+          }
+        }
       }
-    }}
+    }
+  }
+  post {
+    unsuccessful { script {
+        echo "POST -- UNSUCCESFUL"
+        int msg_len_limit = 1024
+        String log = msg_ERR.length() <= msg_len_limit ? msg_ERR : '...'+msg_ERR.substring(msg_ERR.length() - msg_len_limit)
+        String msg = """<b>${BUILD_DISPLAY_NAME}</b> Загрузка <b>${JOB_BASE_NAME}</b> 
+        завершена с ошибками
+        <i>${NOTE}</i> (${currentBuild.durationString}) [${currentBuild.result}]
+        ${BUILD_URL}console\n""" + log
+
+        echo "Уведомление в телеграм об НЕуспешном завершении"
+        echo msg
+
+        withCredentials([string(credentialsId: 'tgNotifyEvents', variable: 'NE_token')]) {
+          notifyEvents message: msg,
+            token: NE_token, 
+            title: "<b>${ib}</b> Неудача", 
+            level: "error"
+        }
+      }
+    }
+    success { script {
+        echo "POST -- SUCCESS"
+        if(autoRun == false){
+          String msg = """<b>${BUILD_DISPLAY_NAME}
+          </b> Загрузка <b>${JOB_BASE_NAME}</b> 
+          завершена успешно
+          <i>${NOTE}</i> (${currentBuild.durationString}) [${currentBuild.result}]
+          ${BUILD_URL}console\n""" 
+          echo "Уведомление в телеграм об успешном завершении"
+          withCredentials([string(credentialsId: 'tgNotifyEvents', variable: 'NE_token')]) {
+            notifyEvents message: msg,
+              token: NE_token, 
+              title: "<b>${ib}</b> Успех", 
+              level: "info"
+          }
+        }
+      }
+    }
+  cleanup { script {
+      // for (el in stepErrors) {
+      //   echo "############ ${el.key}. ${el.value}"
+      // }
+      if (executionCancelled == true) {
+        echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
+      }else{
+      withCredentials([usernamePassword(credentialsId: 'ClusterAdmin'
+        , passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+          , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+          def command = """chcp 65001>nul & vrunner session unlock --ras ${CLADDR} 
+              --cluster-admin ${clADMIN} --cluster-pwd ${clPASSWD} 
+              --ibconnection /s${CLADDR}\\${ib} --db ${ib} --db-user ${ibADMIN} --db-pwd ${ibPASSWORD} 
+              --uccode ${enCode} --v8version ${VER1C}
+              """.replaceAll(/\n\s*/, " ")
+
+	  echo ">>> ${command}"
+
+          bat "echo ${command} > log\\COMMAND.P.txt"
+
+          bat "${command}"
+      }
+    }
+  }}
   }
 }
