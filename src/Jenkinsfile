@@ -252,7 +252,7 @@ pipeline {
   }
   post {
     unsuccessful { script {
-        echo "POST -- UNSUCCESFUL"
+        echo "POST ------------------------------------------- UNSUCCESFUL (autoRun: ${autoRun})"
         int msg_len_limit = 1024
         String log = msg_ERR.length() <= msg_len_limit ? msg_ERR : '...'+msg_ERR.substring(msg_ERR.length() - msg_len_limit)
         String msg = """<b>${BUILD_DISPLAY_NAME}</b> Загрузка <b>${JOB_BASE_NAME}</b> 
@@ -272,7 +272,7 @@ pipeline {
       }
     }
     success { script {
-        echo "POST -- SUCCESS"
+	    echo "POST ------------------------------------------- SUCCESS (autoRun: ${autoRun})"
         if(autoRun == false){
           String msg = """<b>${BUILD_DISPLAY_NAME}
           </b> Загрузка <b>${JOB_BASE_NAME}</b> 
