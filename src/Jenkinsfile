@@ -55,9 +55,9 @@ pipeline {
           withCredentials([usernamePassword(credentialsId: 'ClusterAdmin', passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
             , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner session kill --ras ${CLADDR}
-            --cluster - admin ${ clADMIN } --cluster - pwd ${ clPASSWD }
+            --cluster-admin ${ clADMIN } --cluster-pwd ${ clPASSWD }
             --ibconnection / s${ CLADDR } \\${ ib }
-            --db ${ ib } --db - user ${ ibADMIN } --db - pwd ${ ibPASSWORD }
+            --db ${ ib } --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode } --v8version ${ VER1C }
             """.replaceAll( /\n\s*/, " " )
             bat "echo " + command + " > log\\COMMAND.1.txt"
@@ -68,7 +68,7 @@ pipeline {
                 try {
                   bat "chcp 65001>nul\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                  msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n1. Блокировка ИБ-${e.toString()}"
                     error "Caught ${e.toString()}"
                 } catch (Throwable e) {
                   caughtException = e
@@ -174,7 +174,7 @@ pipeline {
               credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner run
             --ibconnection / s${ CLADDR } \\${ ib }
-            --db - user ${ ibADMIN } --db - pwd ${ ibPASSWORD }
+            --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --nocacheuse
             --uccode ${ enCode } --v8version ${ VER1C }
             --command "ЗапуститьОбновлениеИнформационнойБазы;ЗавершитьРаботуСистемы;"
@@ -217,7 +217,7 @@ pipeline {
             --command \"${IbTitle}\"
             --ibconnection / s${ CLADDR } \\${ ib }
             --ordinaryapp 1
-            --db - user ${ ibADMIN } --db - pwd ${ ibPASSWORD }
+            --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode } --v8version ${ VER1C }
             --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE(echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
             """.replaceAll( /\n\s*/, " " )
@@ -328,11 +328,11 @@ pipeline {
               , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
           def command = """vrunner session unlock
               --ras ${ CLADDR }
-              --cluster - admin ${ clADMIN }
-              --cluster - pwd ${ clPASSWD }
+              --cluster-admin ${ clADMIN }
+              --cluster-pwd ${ clPASSWD }
               --ibconnection / s${ CLADDR } \\${ ib }
-              --db ${ ib } --db - user ${ ibADMIN }
-              --db - pwd ${ ibPASSWORD }
+              --db ${ ib } --db-user ${ ibADMIN }
+              --db-pwd ${ ibPASSWORD }
               --uccode ${ enCode }
               --v8version ${ VER1C }
               """.replaceAll( /\n\s*/, " " )
