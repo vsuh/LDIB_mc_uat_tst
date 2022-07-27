@@ -116,7 +116,7 @@ pipeline {
           def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
           bat "echo " + command + ' > log\\COMMAND.3.txt'
 
-          timeout(10) {
+          timeout(time: 10, unit: "MINUTES") {
             Exception caughtException = null
             catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
               try {
@@ -158,15 +158,48 @@ pipeline {
         }
       }
     }
-    stage('5. Запуск обработок') {
+    stage('5. Предоставление полных прав подрядчикам') {
       steps {
         script {
           if (executionCancelled == true) {
             echo "stage 5 skipped by setting cancel"
             return
           }
+          withCredentials([
+            usernamePassword(
+              credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = "oscript lib\\full_rights.os ${tb}"
+            timeout(time: 5, unit: "MINUTES") {
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
+                try {
+                  bat "chcp 65001>nul\n${ command }"
+                } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                  msg_ERR = msg_ERR + "\n5. Назначение прав - ${e.toString()}"
+                  error "Caught ${e.toString()}"
+                } catch (Throwable e) {
+                  caughtException = e
+                }
+              }
+              if (caughtException) {
+                msg_ERR = msg_ERR + "\n5. Назначение прав - ${caughtException.message}"
+                  error caughtException.message
+              }
+            }
+
+          }
+        }
+      }
+    }
+    stage('6. Запуск обработок') {
+      steps {
+        script {
+          if (executionCancelled == true) {
+            echo "stage 6 skipped by setting cancel"
+            return
+          }
           if (tb != "mc_zup") {
-            echo "stage 5 runs for ZUP only"
+            echo "stage 6 runs for ZUP only"
             return
           }
           withCredentials([
@@ -180,21 +213,21 @@ pipeline {
             --command "ЗапуститьОбновлениеИнформационнойБазы;ЗавершитьРаботуСистемы;"
             --execute \$runnerRoot\\epf\\ЗакрытьПредприятие.epf
             """.replaceAll( /\n\s*/, " " )
-            bat "echo " + command + '> log\\COMMAND.5.txt'
-            timeout(time: 90) {
+            bat "echo " + command + '> log\\COMMAND.6.txt'
+            timeout(time: 30, unit: "MINUTES") {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
                 try {
                   bat "chcp 65001>nul\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                  msg_ERR = msg_ERR + "\n5. Запуск обработок - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n6. Запуск обработок - ${e.toString()}"
                     error "Caught ${e.toString()}"
                 } catch (Throwable e) {
                   caughtException = e
                 }
               }
               if (caughtException) {
-                msg_ERR = msg_ERR + "\n5. Запуск обработок - ${caughtException.message}"
+                msg_ERR = msg_ERR + "\n6. Запуск обработок - ${caughtException.message}"
                   error caughtException.message
               }
             }
@@ -202,12 +235,12 @@ pipeline {
         }
       }
     }
-    stage('6. Установка константы заголовок ИБ') {
+    stage('7. Установка константы заголовок ИБ') {
       steps {
         script {
           if (executionCancelled == true) {
             
-            echo "stage 6 skipped by setting cancel"
+            echo "stage 7 skipped by setting cancel"
             return
           }
           withCredentials([
@@ -222,58 +255,25 @@ pipeline {
             --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE(echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
             """.replaceAll( /\n\s*/, " " )
           
-            bat "echo " + command + " > log\\COMMAND.6.txt"
+            bat "echo " + command + " > log\\COMMAND.7.txt"
 
-            timeout(9) {
+            timeout(time: 9, unit: "MINUTES") {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
                 try {
                   bat "chcp 65001>nul\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                  msg_ERR = msg_ERR + "\n6. Установка заголовка - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n7. Установка заголовка - ${e.toString()}"
                   error "Caught ${e.toString()}"
                 } catch (Throwable e) {
                   caughtException = e
                 }
               }
               if (caughtException) {
-                msg_ERR = msg_ERR + "\n6. Установка заголовка - ${caughtException.message}"
+                msg_ERR = msg_ERR + "\n7. Установка заголовка - ${caughtException.message}"
                   error caughtException.message
               }
             }
-          }
-        }
-      }
-    }
-    stage('7. Предоставление полных прав подрядчикам') {
-      steps {
-        script {
-          if (executionCancelled == true) {
-            echo "stage 7 skipped by setting cancel"
-            return
-          }
-          withCredentials([
-            usernamePassword(
-              credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            def command = "oscript lib\\full_rights.os ${tb}"
-            timeout(time: 5, unit: "MINUTES") {
-              Exception caughtException = null
-              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
-                try {
-                  bat "chcp 65001>nul\n${ command }"
-                } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                  msg_ERR = msg_ERR + "\n7. Назначение прав - ${e.toString()}"
-                  error "Caught ${e.toString()}"
-                } catch (Throwable e) {
-                  caughtException = e
-                }
-              }
-              if (caughtException) {
-                msg_ERR = msg_ERR + "\n7. Назначение прав - ${caughtException.message}"
-                  error caughtException.message
-              }
-            }
-
           }
         }
       }
