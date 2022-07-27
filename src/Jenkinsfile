@@ -56,7 +56,7 @@ pipeline {
             , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner session kill --ras ${CLADDR}
             --cluster-admin ${ clADMIN } --cluster-pwd ${ clPASSWD }
-            --ibconnection /s${ CLADDR } \\${ ib }
+            --ibconnection /s${ CLADDR }\\${ ib }
             --db ${ ib } --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode } --v8version ${ VER1C }
             """.replaceAll( /\n\s*/, " " )
@@ -173,7 +173,7 @@ pipeline {
             usernamePassword(
               credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """vrunner run
-            --ibconnection /s${ CLADDR } \\${ ib }
+            --ibconnection /s${ CLADDR }\\${ ib }
             --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --nocacheuse
             --uccode ${ enCode } --v8version ${ VER1C }
@@ -215,7 +215,7 @@ pipeline {
               credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
             def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
             --command \"${IbTitle}\"
-            --ibconnection /s${ CLADDR } \\${ ib }
+            --ibconnection /s${ CLADDR }\\${ ib }
             --ordinaryapp 1
             --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode } --v8version ${ VER1C }
@@ -330,7 +330,7 @@ pipeline {
               --ras ${ CLADDR }
               --cluster-admin ${ clADMIN }
               --cluster-pwd ${ clPASSWD }
-              --ibconnection /s${ CLADDR } \\${ ib }
+              --ibconnection /s${ CLADDR }\\${ ib }
               --db ${ ib } --db-user ${ ibADMIN }
               --db-pwd ${ ibPASSWORD }
               --uccode ${ enCode }
