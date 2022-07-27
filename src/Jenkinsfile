@@ -1,5 +1,6 @@
 String msg_ERR = ""
 String NOTE = ""
+// stepErrors = [:]
 
 pipeline {
   agent{ label 'mini'}
@@ -27,16 +28,15 @@ pipeline {
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
             autoRun = true
-            def isBatDeny = bat(script: "@curl --silent -X GET http://tb/q/${JOB_BASE_NAME}", returnStdout: true)
+            def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
             if (isBatDeny != "on") {
-              echo "Сборка `${JOB_BASE_NAME}` отменена: в http://tb (${isBatDeny}). Успешное завершение."
+              echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
               executionCancelled = true
               currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
-
+              // stepErrors.stage0 = "0: Выполнение pipeline отменено (${isBatDeny}) и АВТОЗАПУСК"
             }
           } 
-
-
+            // stepErrors.stage0 = "0: Успешно ${runningUser}"
         }
       }
     }
@@ -44,7 +44,8 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step 1 skipped by setting cancel"
+            echo "stage 1 skipped by setting cancel"
+            // stepErrors.stage1 = "1: Отменен"
             return
           }
             echo "Проверка наличия oscript.exe в PATH"
@@ -53,7 +54,7 @@ pipeline {
           } catch (e) {
             currentBuild.result = 'ABORTED'
             msg_ERR = msg_ERR + "\n1. Не удалось найти OSCRIPT.exe - ABORT"
-
+            // stepErrors.stage1 = "1: Не удалось найти OSCRIPT.exe - ABORT"
             error("Не удалось найти OSCRIPT.exe: "+ e.toString())
           }
           bat "chcp 65001>nul\nif not exist log md log"
@@ -71,22 +72,23 @@ pipeline {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
-                  bat "chcp 65001>nul\n${command}"
+                  bat "chcp 65001>nul\n${ command }"
                   } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                     msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${e.toString()}"
-
+                    // stepErrors.stage1 = "1: ${e.toString()}"
                     error "Caught ${e.toString()}"
                   } catch (Throwable e) {
-
+                    // stepErrors.stage1 = "1: ${e.toString()}"
                     caughtException = e
                   }
                 }
                 if (caughtException) {
                   msg_ERR = msg_ERR + "\n1. Блокировка ИБ - ${caughtException.message}"
+                  // stepErrors.stage1 = "1: ${caughtException.message}"
                   error caughtException.message
               }
             }
-
+            // stepErrors.stage5 = "1: OK"
           }
         }
       }
@@ -96,7 +98,8 @@ pipeline {
         timeout(time: 1, unit: 'MINUTES') {
           script {
           if (executionCancelled == true) {
-              echo "step 2 skipped by setting cancel"
+              // stepErrors.stage2 = "2: Отменен"
+              echo "stage 2 skipped by setting cancel"
               return
             }
             withCredentials([usernamePassword(credentialsId: 'goblin_moscollector', passwordVariable: 'passwd', usernameVariable: 'user')]) {
@@ -106,6 +109,7 @@ pipeline {
                 echo "unsuccessful mapping, try with password. Previous retuned: " + RETURN_STATUS
                 RC = bat returnStatus: true, script: """ chcp 65001>nul\nnet use ${SQLbackup} ${passwd} /user:${user} """
                 if (RC != 0) {
+                  // stepErrors.stage2 = "2: Не удалось подключить сетевой диск. RC=${RC}"
                   error
                 }
               }
@@ -119,27 +123,30 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step 3 skipped by setting cancel"
+            // stepErrors.stage3 = "3: Отменен"
+            echo "stage 3 skipped by setting cancel"
             return
           }
           def command = "oscript ${cs} ${ib} ${tb} ${scPath}"
           bat "echo "+ command + ' > log\\COMMAND.3.txt'
           
-          timeout(time: 15, unit: 'MINUTES') {
+          timeout(10) {
             Exception caughtException = null
             catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
               try {
                 bat "chcp 65001>nul\n${ command }"
               } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${e.toString()}"
+                // stepErrors.stage3 = "3: ${e.toString()}"
                 error "Caught ${e.toString()}"
               } catch (Throwable e) {
-
+                // stepErrors.stage3 = "3: ${e.toString()}"
                 caughtException = e
               }
             }
             if (caughtException) {
                 msg_ERR = msg_ERR + "\n3. Формирование скрипта - ${caughtException.message}"
+                // stepErrors.stage3 = "3: ${caughtException.message}"
                 error caughtException.message
             }
           }
@@ -152,26 +159,39 @@ pipeline {
         script {
           if (executionCancelled == true) {
             // stepErrors.stage4 = "4: Отменен"
-            echo "step 4 skipped by setting cancel"
+            echo "stage 4 skipped by setting cancel"
             return
           }
           def timeoutValue = ["mc_bnu": 350, "mc_zup": 280, "mc_uat": 90][tb]
           timeout (time: timeoutValue, unit: "MINUTES") {
+//              Exception caughtException = null
+//              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+//                try {
                   withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
                     bat "echo "+ command + '> log\\COMMAND.4.txt'
                     RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
                   }
-            def log_cmd = "curl --silent http://tb/log/${ib}"
-            echo "Регистрация загрузки: $log_cmd"
-            Rk = bat returnStatus: true, script: "$log_cmd"
-
+//              } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+//                // stepErrors.stage4 = "4: ${e.toString()}"
+//               msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${e.toString()}"
+//                error "Caught ${e.toString()}"
+//              } catch (Throwable e) {
+//                // stepErrors.stage4 = "4: ${e.toString()}"
+//                caughtException = e
+//              }
+//            }
+//            if (caughtException) {
+//                msg_ERR = msg_ERR + "\n4. Загрузка ИБ - ${caughtException.message}"
+//                // stepErrors.stage4 = "4: ${caughtException.message}"
+//                error caughtException.message
+//            }
           }
           echo "##### Результат работы скрипта: ${RC}"
           if ( RC != 0 ) {
             currentBuild.result = 'ERROR'
           }
-          
+          // stepErrors.stage5 = "4: OK"
         }
       }
     }
@@ -179,7 +199,11 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step 5 skipped by setting cancel"
+            echo "stage 5 skipped by setting cancel"
+            return
+          }
+          if (tb != "mc_zup") {
+            echo "stage 5 runs for ZUP only"
             return
           }
           withCredentials([
@@ -194,7 +218,7 @@ pipeline {
                 --execute \$runnerRoot\\epf\\ЗакрытьПредприятие.epf
             """.replaceAll( /\n\s*/, " " )
             bat "echo "+ command + '> log\\COMMAND.5.txt'
-            timeout (time: 9, unit: 'MINUTES') {
+            timeout (time: 90) {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
@@ -219,7 +243,8 @@ pipeline {
       steps {
         script {
           if (executionCancelled == true) {
-            echo "step 6 skipped by setting cancel"
+            
+            echo "stage 6 skipped by setting cancel"
             return
           }
           withCredentials([
@@ -234,35 +259,65 @@ pipeline {
                 --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE ( echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
                 """.replaceAll( /\n\s*/, " " )
           
-            bat "echo "+ command + " > log\\COMMAND.5.txt"
-            timeout(time: 9, unit: 'MINUTES') {
+            bat "echo "+ command + " > log\\COMMAND.6.txt"
+            
+            timeout(9) {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
                 try {
                   bat "chcp 65001>nul\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n6. Установка заголовка - ${e.toString()}"
                   error "Caught ${e.toString()}"
                 } catch (Throwable e) {
-
                   caughtException = e
                 }
               }
               if (caughtException) {
-                  msg_ERR = msg_ERR + "\n5. Установка заголовка - ${caughtException.message}"
+                  msg_ERR = msg_ERR + "\n6. Установка заголовка - ${caughtException.message}"
+                  error caughtException.message
+              }
+            }
+          }
+        }
+      }
+    }
+    stage ('7. Предоставление полных прав подрядчикам') {
+      steps {
+        script {
+          if (executionCancelled == true) {
+            echo "stage 7 skipped by setting cancel"
+            return
+          }
+          withCredentials([
+              usernamePassword(
+                  credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+            def command = "oscript lib\\full_rights.os ${tb}"
+            timeout(time: 5, unit: "MINUTES") {
+              Exception caughtException = null
+              catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') { 
+                try {
+                  bat "chcp 65001>nul\n${ command }"
+                } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                  msg_ERR = msg_ERR + "\n7. Назначение прав - ${e.toString()}"
+                  error "Caught ${e.toString()}"
+                } catch (Throwable e) {
+                  caughtException = e
+                }
+              }
+              if (caughtException) {
+                  msg_ERR = msg_ERR + "\n7. Назначение прав - ${caughtException.message}"
                   error caughtException.message
               }
             }
 
-
-          }
         }
       }
     }
   }
   post {
-    unsuccessful { script {
-        echo "POST -- UNSUCCESFUL"
+    unsuccessful{
+      script {
         int msg_len_limit = 1024
         String log = msg_ERR.length() <= msg_len_limit ? msg_ERR : '...'+msg_ERR.substring(msg_ERR.length() - msg_len_limit)
         String msg = """<b>${BUILD_DISPLAY_NAME}</b> Загрузка <b>${JOB_BASE_NAME}</b> 
@@ -281,8 +336,8 @@ pipeline {
         }
       }
     }
-    success { script {
-        echo "POST -- SUCCESS"
+    success{
+      script {
         if(autoRun == false){
           String msg = """<b>${BUILD_DISPLAY_NAME}
           </b> Загрузка <b>${JOB_BASE_NAME}</b> 
@@ -300,22 +355,29 @@ pipeline {
       }
     }
   cleanup { script {
+      // for (el in stepErrors) {
+      //   echo "############ ${el.key}. ${el.value}"
+      // }
       if (executionCancelled == true) {
-        echo "step `cleanup` skipped by setting cancel (${executionCancelled})"
+        echo "post step `cleanup` skipped by setting cancel (${executionCancelled})"
       }else{
       withCredentials([usernamePassword(credentialsId: 'ClusterAdmin'
         , passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
           , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-          def command = """chcp 65001>nul & vrunner session unlock --ras ${CLADDR} 
-              --cluster-admin ${clADMIN} --cluster-pwd ${clPASSWD} 
-              --ibconnection /s${CLADDR}\\${ib} --db ${ib} --db-user ${ibADMIN} --db-pwd ${ibPASSWORD} 
-              --uccode ${enCode} --v8version ${VER1C}
-              """.replaceAll(/\n\s*/, " ")
+          def command = """vrunner session unlock
+          --ras ${CLADDR}
+          --cluster-admin ${ clADMIN }
+          --cluster-pwd ${ clPASSWD }
+          --ibconnection /s${CLADDR}\\${ ib }
+          --db ${ ib } --db-user ${ ibADMIN }
+          --db-pwd ${ ibPASSWORD }
+          --uccode ${ enCode }
+          --v8version ${ VER1C }
+          """.replaceAll( /\n\s*/, " " )
 
-	  echo ">>> ${command}"
-          bat "echo ${command} > log\\COMMAND.P.txt"
+          bat "echo "+ command + " > log\\COMMAND.P.txt"
 
-          bat "${command}"
+          bat """chcp 65001>nul\n$command"""
       }
     }
   }}

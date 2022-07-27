@@ -1,4 +1,4 @@
-#!/progra~2/OneScript/bin/oscript.exe -cgi -encoding=utf8
+#!/progra~2/OneScript/bin/oscript.exe -encoding=utf8
 //*/
 // Файл располагается на сервере [obr-mdb-01](http://jj) в каталоге
 // C:\wamp\bin\apache\apache2.2.22\cgi-bin
@@ -40,7 +40,7 @@
   , АргументыКоманднойСтроки[0]
   , АргументыКоманднойСтроки[1]
   , Неопределено
-  , "\\192.168.3.56\backup"
+  , "I:"
   , "F:\db"
   , "F:\log"
 );

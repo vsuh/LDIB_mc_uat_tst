@@ -1,0 +1,78 @@
+{
+   "ibs":{
+      "mc_bnu_tst":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_bnu_tst",
+         "users":[
+            
+         ]
+      },
+      "mc_bnu_two":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_bnu_two",
+         "users":[
+            
+         ]
+      },
+      "mc_bnu_iris":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_bnu_iris",
+         "users":[
+            "Нестеренко В.Е.(СБК)",
+            "Снопов О.О. (СБК)"
+         ]
+      },
+      "mc_bnu_iris_two":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_bnu_iris_two",
+         "users":[
+            "Нестеренко В.Е.(СБК)",
+            "Снопов О.О. (СБК)"
+         ]
+      },
+      "mc_zup_iris":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_bnu_iris_two",
+         "users":[
+            "Нестеренко В.Е.(СБК)",
+            "Снопов О.О. (СБК)"
+         ]
+      },
+      "mc_zup_iris_two":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_bnu_iris_two",
+         "users":[
+            "Нестеренко В.Е.(СБК)",
+            "Снопов О.О. (СБК)"
+         ]
+      },
+      "mc_uat_tst":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_uat_tst",
+         "users":[
+            
+         ]
+      },
+      "mc_zup_tst":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_zup_tst",
+         "users":[
+            
+         ]
+      },
+      "mc_zup_two":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"mc_zup_two",
+         "users":[
+            
+         ]
+      },
+      "ris_bnu_tst":{
+         "Сервер":"lob-1c-test",
+         "ИБ":"ris_bnu_tst",
+         "users":[
+            
+         ]
+      }
+   }
+}
