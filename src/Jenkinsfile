@@ -249,13 +249,13 @@ pipeline {
           withCredentials([
             usernamePassword(
               credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            def command = """if exist lib\\УстановкаЗаголовкаКопииИБ.epf ( vrunner run 
+            def command = """vrunner run 
             --command \"${IbTitle}\"
             --ibconnection /s${ CLADDR }\\${ ib }
             --ordinaryapp 1
             --db-user ${ ibADMIN } --db-pwd ${ ibPASSWORD }
             --uccode ${ enCode } --v8version ${ VER1C }
-            --execute lib\\УстановкаЗаголовкаКопииИБ.epf ) ELSE(echo Не обнаружен файл обработки lib\\УстановкаЗаголовкаКопииИБ.epf)
+            --execute lib\\УстановкаЗаголовкаКопииИБ.epf
             """.replaceAll( /\n\s*/, " " )
           
             bat "echo " + command + " > log\\COMMAND.7.txt"
