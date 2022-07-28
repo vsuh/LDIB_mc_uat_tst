@@ -25,13 +25,17 @@ pipeline {
         script {
           def runningUser = currentBuild.rawBuild.getCause(Cause.UserIdCause)
           if (null == runningUser) { // scheduled job launch
+            echo "=== Autorun mode ==="
             autoRun = true
-            def isBatDeny = bat(script: "@curl --silent -X GET http://mysql:8000/q/${JOB_BASE_NAME}", returnStdout: true)
+            def isBatDeny = bat(script: "@curl --silent -X GET http://tb/q/${JOB_BASE_NAME}", returnStdout: true)
             if (isBatDeny != "on") {
-              echo "Сборка `${JOB_BASE_NAME}` отменена: в http://mysql:8000 (${isBatDeny}). Успешное завершение."
+              echo "Сборка `${JOB_BASE_NAME}` отменена: в http://tb (${isBatDeny}). Успешное завершение."
               executionCancelled = true
               currentBuild.getRawBuild().getExecutor().interrupt(Result.SUCCESS)
             }
+          } else {
+            echo "=== Manual mode ==="
+          }
           }
         }
       }
