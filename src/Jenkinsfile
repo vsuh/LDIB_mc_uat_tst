@@ -161,7 +161,7 @@ pipeline {
         }
       }
     }
-    stage('5. Предоставление полных прав подрядчикам') {
+    stage('5. Предоставление полных прав подрядчикам, установка заголовка, обновление конфигурации ЗУП') {
       steps {
         script {
           if (executionCancelled == true) {
@@ -171,7 +171,7 @@ pipeline {
           withCredentials([
             usernamePassword(
               credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
-            def command = "oscript lib\\full_rights.os ${tb}"
+            def command = "oscript lib\\full_rights.os ${ib}"
             timeout(time: 5, unit: "MINUTES") {
               Exception caughtException = null
               catchError(buildResult: 'SUCCESS', stageResult: 'ABORTED') {
