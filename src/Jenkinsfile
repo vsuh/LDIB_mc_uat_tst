@@ -161,7 +161,34 @@ pipeline {
         }
       }
     }
-    stage('5. Предоставление полных прав подрядчикам, установка заголовка, обновление конфигурации ЗУП') {
+    stage('5. Разблокирование ИБ') {
+      steps {
+        script {
+          if (executionCancelled == true) {
+            echo "5 step skipped by setting cancel (${executionCancelled})"
+          } else {
+            withCredentials([usernamePassword(credentialsId: 'ClusterAdmin'
+              , passwordVariable: 'clPASSWD', usernameVariable: 'clADMIN')
+              , usernamePassword(credentialsId: 'IBadmin', passwordVariable: 'ibPASSWORD', usernameVariable: 'ibADMIN')]) {
+              def command = """vrunner session unlock
+                --ras ${ CLADDR }
+                --cluster-admin ${ clADMIN }
+                --cluster-pwd ${ clPASSWD }
+                --ibconnection /s${ CLADDR }\\${ ib }
+                --db ${ ib } 
+                --db-user ${ ibADMIN } 
+                --db-pwd ${ ibPASSWORD }
+                --uccode ${ enCode }
+                --v8version ${ VER1C }
+              """.replaceAll( /\n\s*/, " " )
+          bat "echo " + command + " > log\\COMMAND.5.txt"
+          bat """chcp 65001>nul\n$command"""
+            }
+          }
+       }
+      }
+    }
+    stage('6. Предоставление полных прав подрядчикам, установка заголовка, обновление конфигурации ЗУП') {
       steps {
         script {
           if (executionCancelled == true) {
@@ -178,14 +205,14 @@ pipeline {
                 try {
                   bat "chcp 65001>nul\n${ command }"
                 } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
-                  msg_ERR = msg_ERR + "\n5. Назначение прав - ${e.toString()}"
+                  msg_ERR = msg_ERR + "\n6. Назначение прав - ${e.toString()}"
                   error "Caught ${e.toString()}"
                 } catch (Throwable e) {
                   caughtException = e
                 }
               }
               if (caughtException) {
-                msg_ERR = msg_ERR + "\n5. Назначение прав - ${caughtException.message}"
+                msg_ERR = msg_ERR + "\n6. Назначение прав - ${caughtException.message}"
                   error caughtException.message
               }
             }
@@ -248,10 +275,10 @@ post {
                 --cluster-pwd ${ clPASSWD }
                 --ibconnection /s${ CLADDR }\\${ ib }
                 --db ${ ib } 
-		--db-user ${ ibADMIN } 
-		--db-pwd ${ ibPASSWORD }
+        --db-user ${ ibADMIN } 
+        --db-pwd ${ ibPASSWORD }
                 --uccode ${ enCode }
-		--v8version ${ VER1C }
+        --v8version ${ VER1C }
               """.replaceAll( /\n\s*/, " " )
           bat "echo " + command + " > log\\COMMAND.P.txt"
           bat """chcp 65001>nul\n$command"""
