@@ -139,28 +139,28 @@ pipeline {
         }
       }
     }
-    stage('4. Загрузка ИБ из бэкапа') {
-      steps {
-        script {
-          if (executionCancelled == true) {
-            echo "stage 4 skipped by setting cancel"
-            return
-          }
-          def timeoutValue = ["mc_bnu": 350, "mc_zup": 280, "mc_uat": 90][tb]
-          timeout(time: timeoutValue, unit: "MINUTES") {
-            withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
-                    def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
-                    bat "echo " + command + '> log\\COMMAND.4.txt'
-              RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
-            }
-          }
-          echo "##### Результат работы скрипта: ${RC}"
-          if (RC != 0) {
-            currentBuild.result = 'ERROR'
-          }
-        }
-      }
-    }
+//     stage('4. Загрузка ИБ из бэкапа') {
+//       steps {
+//         script {
+//           if (executionCancelled == true) {
+//             echo "stage 4 skipped by setting cancel"
+//             return
+//           }
+//           def timeoutValue = ["mc_bnu": 350, "mc_zup": 280, "mc_uat": 90][tb]
+//           timeout(time: timeoutValue, unit: "MINUTES") {
+//             withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
+//                     def command = "sqlcmd -S ${SQLSRV} -U ${SQLadmin} -P ${SQLpasswd} -i \"${scPath}\" -o log\\COMMAND.4.out"
+//                     bat "echo " + command + '> log\\COMMAND.4.txt'
+//               RC = bat returnStatus: true, script: "chcp 65001>nul\n${ command }"
+//             }
+//           }
+//           echo "##### Результат работы скрипта: ${RC}"
+//           if (RC != 0) {
+//             currentBuild.result = 'ERROR'
+//           }
+//         }
+//       }
+//     }
     stage('5. Предоставление полных прав подрядчикам') {
       steps {
         script {
@@ -295,13 +295,13 @@ pipeline {
         echo "Уведомление в телеграм об НЕуспешном завершении"
         echo msg
 
-          withCredentials([string(credentialsId: 'tgNotifyEvents', variable: 'NE_token')]) {
-          notifyEvents message: msg,
-              token: NE_token,
-                title: "<b>${ib}</b> Неудача",
-                  level: "error"
-          }
-        }
+//           withCredentials([string(credentialsId: 'tgNotifyEvents', variable: 'NE_token')]) {
+//           notifyEvents message: msg,
+//               token: NE_token,
+//                 title: "<b>${ib}</b> Неудача",
+//                   level: "error"
+//           }
+//         }
       }
 
     
