@@ -142,10 +142,10 @@ pipeline {
     stage('4. Загрузка ИБ из бэкапа') {
       steps {
         script {
-        //   if (executionCancelled == true) {
-        //     echo "stage 4 skipped by setting cancel"
-        //     return
-        //   }
+          if (executionCancelled == true) {
+            echo "stage 4 skipped by setting cancel"
+            return
+          }
         //   def timeoutValue = ["mc_bnu": 350, "mc_zup": 280, "mc_uat": 90][tb]
         //   timeout(time: timeoutValue, unit: "MINUTES") {
         //     withCredentials([usernamePassword(credentialsId: 'SQLadmin', passwordVariable: 'SQLpasswd', usernameVariable: 'SQLadmin')]) {
