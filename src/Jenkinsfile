@@ -141,7 +141,7 @@ pipeline {
     }
     stage('4. Загрузка ИБ из бэкапа') {
       steps {
-        // script {
+        script {
         //   if (executionCancelled == true) {
         //     echo "stage 4 skipped by setting cancel"
         //     return
@@ -158,7 +158,7 @@ pipeline {
         //   if (RC != 0) {
         //     currentBuild.result = 'ERROR'
         //   }
-        // }
+        }
       }
     }
     stage('5. Разблокирование ИБ') {
