@@ -239,7 +239,7 @@ post {
         //       title: "<b>${ib}</b> Неудача",
         //       level: "error"
         //   }
-        // }
+        }
       }
     success { 
       script {
